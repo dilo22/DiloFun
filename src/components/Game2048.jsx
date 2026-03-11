@@ -147,16 +147,28 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [move]);
 
-  const handleTouchStart = (e) => setTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  const handleTouchStart = (e) => {
+  const touch = e.touches[0];
+  setTouchStart({ x: touch.clientX, y: touch.clientY });
+};
+
+const handleTouchMove = (e) => {
+  e.preventDefault();
+};
+
   const handleTouchEnd = (e) => {
     if (!touchStart) return;
-    const dx = e.changedTouches[0].clientX - touchStart.x;
-    const dy = e.changedTouches[0].clientY - touchStart.y;
+
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+
     if (Math.abs(dx) > Math.abs(dy)) {
       if (Math.abs(dx) > 30) move(dx > 0 ? 'RIGHT' : 'LEFT');
     } else {
       if (Math.abs(dy) > 30) move(dy > 0 ? 'DOWN' : 'UP');
     }
+
     setTouchStart(null);
   };
 
@@ -196,9 +208,11 @@ export default function App() {
         </div>
 
         {/* Game Container */}
-        <div 
-          className="relative aspect-square bg-slate-900/50 rounded-[2.5rem] p-4 border border-white/10 shadow-2xl overflow-hidden"
+        <div
+          className="relative aspect-square bg-slate-900/50 rounded-[2.5rem] p-4 border border-white/10 shadow-2xl overflow-hidden overscroll-contain"
+          style={{ touchAction: 'none' }}
           onTouchStart={handleTouchStart}
+          onTouchMove={(e) => e.preventDefault()}
           onTouchEnd={handleTouchEnd}
         >
           {/* Background Grid */}
