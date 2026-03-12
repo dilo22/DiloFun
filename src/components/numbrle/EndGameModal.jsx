@@ -49,7 +49,7 @@ export default function EndGameModal({
               </p>
 
               <a
-                href="https://buymeacoffee.com/dilofun"
+                href="https://ko-fi.com/dilofun"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-400 px-5 py-4 font-black text-slate-950 shadow-lg transition-all hover:scale-[1.03] hover:shadow-xl"
