@@ -280,31 +280,26 @@ export default function App() {
           </div>
 
           {/* Tiles Layer */}
-          <div className="absolute inset-4 grid grid-cols-4 grid-rows-4 gap-3 pointer-events-none">
-            <AnimatePresence>
-              {grid.map((row, r) =>
-                row.map(
-                  (cell, c) =>
-                    cell !== 0 && (
-                      <motion.div
-                        key={`${r}-${c}-${cell}`}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        layout
-                        transition={{ layout: { duration: 0.14 } }}
-                        className={`flex items-center justify-center text-2xl font-black rounded-2xl ${
-                          colors[cell] || 'bg-purple-900 text-white'
-                        }`}
-                        style={{ gridRow: r + 1, gridColumn: c + 1 }}
-                      >
-                        {cell}
-                      </motion.div>
-                    )
-                )
-              )}
-            </AnimatePresence>
+          {/* Tiles Layer */}
+{/* Tiles Layer */}
+<div className="absolute inset-4 grid grid-cols-4 grid-rows-4 gap-3 pointer-events-none">
+  {grid.map((row, r) =>
+    row.map(
+      (cell, c) =>
+        cell !== 0 && (
+          <div
+            key={`${r}-${c}`}
+            className={`flex items-center justify-center text-2xl font-black rounded-2xl ${
+              colors[cell] || 'bg-purple-900 text-white'
+            }`}
+            style={{ gridRow: r + 1, gridColumn: c + 1 }}
+          >
+            {cell}
           </div>
+        )
+    )
+  )}
+</div>
 
           {/* Game Over Overlay */}
           <AnimatePresence>
