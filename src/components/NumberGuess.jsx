@@ -1,0 +1,244 @@
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ChevronLeft,
+  RotateCcw,
+  Trophy,
+  Hash,
+  ArrowDown,
+  ArrowUp,
+  Target,
+  Gamepad2,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const MIN = 1;
+const MAX = 100;
+
+function createTarget() {
+  return Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
+}
+
+export default function NumberGuess() {
+  const navigate = useNavigate();
+
+  const [target, setTarget] = useState(createTarget());
+  const [guess, setGuess] = useState('');
+  const [attempts, setAttempts] = useState(0);
+  const [bestScore, setBestScore] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [feedback, setFeedback] = useState(null);
+  const [won, setWon] = useState(false);
+
+  const guessedValue = useMemo(() => Number(guess), [guess]);
+
+  const resetGame = () => {
+    setTarget(createTarget());
+    setGuess('');
+    setAttempts(0);
+    setHistory([]);
+    setFeedback(null);
+    setWon(false);
+  };
+
+  const submitGuess = () => {
+    if (won) return;
+    if (!guess.trim()) return;
+    if (!Number.isInteger(guessedValue)) return;
+    if (guessedValue < MIN || guessedValue > MAX) return;
+
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
+
+    if (guessedValue < target) {
+      setFeedback('low');
+      setHistory((prev) => [...prev, { value: guessedValue, result: 'Trop petit' }]);
+      setGuess('');
+      return;
+    }
+
+    if (guessedValue > target) {
+      setFeedback('high');
+      setHistory((prev) => [...prev, { value: guessedValue, result: 'Trop grand' }]);
+      setGuess('');
+      return;
+    }
+
+    setFeedback('win');
+    setHistory((prev) => [...prev, { value: guessedValue, result: 'Trouvé !' }]);
+    setWon(true);
+    setBestScore((prev) => (prev === null ? nextAttempts : Math.min(prev, nextAttempts)));
+  };
+
+  const feedbackConfig = {
+    low: {
+      icon: ArrowUp,
+      title: 'Trop petit',
+      text: 'Essaie un nombre plus grand.',
+      classes: 'from-cyan-500/20 to-blue-500/20 border-cyan-400/20 text-cyan-300',
+    },
+    high: {
+      icon: ArrowDown,
+      title: 'Trop grand',
+      text: 'Essaie un nombre plus petit.',
+      classes: 'from-purple-500/20 to-fuchsia-500/20 border-purple-400/20 text-purple-300',
+    },
+    win: {
+      icon: Trophy,
+      title: 'Bravo !',
+      text: 'Tu as trouvé le nombre secret.',
+      classes: 'from-yellow-500/20 to-cyan-500/20 border-yellow-300/20 text-yellow-200',
+    },
+  };
+
+  const currentFeedback = feedback ? feedbackConfig[feedback] : null;
+  const FeedbackIcon = currentFeedback?.icon;
+
+  return (
+    <div className="min-h-screen bg-[#0B0E14] p-4 text-white flex flex-col items-center">
+      <div className="mb-8 flex w-full max-w-md items-center justify-between">
+        <div
+          onClick={() => navigate('/')}
+          className="flex cursor-pointer items-center gap-2"
+        >
+          <motion.div
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-cyan-400"
+          >
+            <Gamepad2 className="h-4 w-4 text-white" />
+          </motion.div>
+
+          <span className="text-xl font-black tracking-tighter text-white">
+            DILO <span className="text-cyan-400">FUN</span>
+          </span>
+        </div>
+
+        <button
+          onClick={() => window.history.back()}
+          className="rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="w-full max-w-md">
+        <div className="mb-6 flex gap-4">
+          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Tentatives
+            </span>
+            <span className="text-xl font-black">{attempts}</span>
+          </div>
+
+          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Record
+            </span>
+            <span className="text-xl font-black text-cyan-400">
+              {bestScore === null ? '—' : bestScore}
+            </span>
+          </div>
+
+          <button
+            onClick={resetGame}
+            className="flex w-14 items-center justify-center rounded-2xl bg-purple-600 transition-colors hover:bg-purple-500"
+          >
+            <RotateCcw className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="rounded-[2.5rem] border border-white/10 bg-slate-900/50 p-4 shadow-2xl">
+          <div className="mb-4 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
+              <Target className="h-4 w-4 text-cyan-400" />
+              <p className="text-xs font-bold uppercase tracking-tighter text-slate-400">
+                Devine un nombre entre {MIN} et {MAX}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/5 bg-[#07101d] p-4">
+            <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <Hash className="h-5 w-5 text-cyan-400" />
+              <input
+                type="number"
+                min={MIN}
+                max={MAX}
+                value={guess}
+                onChange={(e) => setGuess(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submitGuess();
+                }}
+                disabled={won}
+                placeholder="Entre un nombre"
+                className="w-full bg-transparent text-lg font-black text-white outline-none placeholder:text-slate-500"
+              />
+            </div>
+
+            <button
+              onClick={submitGuess}
+              disabled={won}
+              className="mb-4 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-6 py-4 font-black text-white transition-transform hover:scale-[1.01] disabled:opacity-60"
+            >
+              VALIDER
+            </button>
+
+            <AnimatePresence mode="wait">
+              {currentFeedback && (
+                <motion.div
+                  key={feedback}
+                  initial={{ opacity: 0, y: 14, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                  transition={{ duration: 0.22 }}
+                  className={`mb-4 rounded-2xl border bg-gradient-to-r p-4 ${currentFeedback.classes}`}
+                >
+                  <div className="flex items-center gap-3">
+                    {FeedbackIcon && <FeedbackIcon className="h-5 w-5" />}
+                    <div>
+                      <p className="font-black">{currentFeedback.title}</p>
+                      <p className="text-sm text-slate-200/80">{currentFeedback.text}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-500">
+                Historique
+              </p>
+
+              {history.length === 0 ? (
+                <p className="text-sm text-slate-400">Aucune tentative pour l’instant.</p>
+              ) : (
+                <div className="space-y-2">
+                  {history.slice(-5).reverse().map((item, index) => (
+                    <div
+                      key={`${item.value}-${index}`}
+                      className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-800/60 px-3 py-2"
+                    >
+                      <span className="font-black text-white">{item.value}</span>
+                      <span className="text-sm text-slate-400">{item.result}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {won && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={resetGame}
+                className="mt-4 w-full rounded-2xl border border-white/10 bg-white/5 px-6 py-4 font-black text-white transition hover:bg-white/10"
+              >
+                NOUVELLE PARTIE
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

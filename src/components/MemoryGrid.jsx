@@ -10,29 +10,8 @@ import {
   Diamond,
   Heart,
   Zap,
+  Gamepad2,
 } from 'lucide-react';
-
-// --- Logo Component ---
-const DiloLogo = ({ className = 'w-8 h-8' }) => (
-  <svg
-    viewBox="0 0 100 100"
-    className={className}
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <defs>
-      <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#A855F7" />
-        <stop offset="100%" stopColor="#22D3EE" />
-      </linearGradient>
-    </defs>
-    <rect width="100" height="100" rx="28" fill="url(#logoGradient)" />
-    <path
-      d="M32 40C28.6863 40 26 42.6863 26 46V60C26 66.6274 31.3726 72 38 72H42L46 66H54L58 72H62C68.6274 72 74 66.6274 74 60V46C74 42.6863 71.3137 40 68 40H32ZM36 52H40V56H36V52ZM36 48V52H32V48H36ZM40 48H44V52H40V48ZM60 48C61.1046 48 62 48.8954 62 50C62 51.1046 61.1046 52 60 52C58.8954 52 58 51.1046 58 50C58 48.8954 58.8954 48 60 48ZM64 54C65.1046 54 66 54.8954 66 56C66 57.1046 65.1046 58 64 58C62.8954 58 62 57.1046 62 56C62 54.8954 62.8954 54 64 54ZM64 42C65.1046 42 66 42.8954 66 44C66 45.1046 65.1046 46 64 46C62.8954 46 62 45.1046 62 44C62 42.8954 62.8954 42 64 42ZM68 50C69.1046 50 70 50.8954 70 52C70 53.1046 69.1046 54 68 54C66.8954 54 66 53.1046 66 52C66 50.8954 66.8954 50 68 50Z"
-      fill="white"
-    />
-  </svg>
-);
 
 // --- Config ---
 const ICONS = [Star, Diamond, Heart, Zap, Brain, Trophy];
@@ -149,9 +128,18 @@ export default function MemoryGrid() {
     <div className="min-h-screen bg-[#0B0E14] p-4 font-sans text-white flex flex-col items-center">
       {/* Header */}
       <div className="mb-8 flex w-full max-w-md items-center justify-between">
-        <div className="flex items-center gap-2">
-          <DiloLogo className="w-8 h-8" />
-          <span className="text-xl font-black tracking-tighter">
+        <div
+          onClick={() => navigate('/')}
+          className="flex cursor-pointer items-center gap-2"
+        >
+          <motion.div
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-cyan-400"
+          >
+            <Gamepad2 className="h-4 w-4 text-white" />
+          </motion.div>
+
+          <span className="text-xl font-black tracking-tighter text-white">
             DILO <span className="text-cyan-400">FUN</span>
           </span>
         </div>
