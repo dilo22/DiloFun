@@ -6,7 +6,7 @@ import { RotateCcw, Trophy, ChevronLeft, Gamepad2 } from 'lucide-react';
 // --- Utilities ---
 const GRID_SIZE = 4;
 const INITIAL_TILES = 2;
-const SPAWN_DELAY = 180; // délai avant l'apparition de la nouvelle case
+const SPAWN_DELAY = 180;
 
 const getEmptyCells = (grid) => {
   const cells = [];
@@ -64,6 +64,7 @@ const colors = {
 export default function App() {
   const navigate = useNavigate();
   const spawnTimeoutRef = useRef(null);
+  const boardRef = useRef(null);
 
   const [grid, setGrid] = useState([]);
   const [score, setScore] = useState(0);
@@ -103,6 +104,21 @@ export default function App() {
       clearSpawnTimeout();
     };
   }, [initGame]);
+
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+
+    const preventTouchMove = (e) => {
+      e.preventDefault();
+    };
+
+    board.addEventListener('touchmove', preventTouchMove, { passive: false });
+
+    return () => {
+      board.removeEventListener('touchmove', preventTouchMove);
+    };
+  }, []);
 
   const move = useCallback(
     (direction) => {
@@ -153,13 +169,11 @@ export default function App() {
 
       clearSpawnTimeout();
 
-      // 1) On affiche d'abord la grille après déplacement/fusion
       setGrid(newGrid);
       setScore(newScore);
       if (newScore > bestScore) setBestScore(newScore);
       setIsWaitingForSpawn(true);
 
-      // 2) Puis on ajoute la nouvelle case un peu après
       spawnTimeoutRef.current = setTimeout(() => {
         const finalGrid = spawnTile(newGrid);
         setGrid(finalGrid);
@@ -210,8 +224,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0E14] text-white font-sans flex flex-col items-center p-4">
-      {/* Header Navigation */}
+    <div className="min-h-screen bg-[#0B0E14] text-white font-sans flex flex-col items-center p-4 overscroll-none overflow-hidden">
       <div className="w-full max-w-md flex items-center justify-between mb-8">
         <div
           onClick={() => navigate('/')}
@@ -238,7 +251,6 @@ export default function App() {
       </div>
 
       <div className="w-full max-w-md">
-        {/* Score Board */}
         <div className="flex gap-4 mb-6">
           <div className="flex-1 bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col items-center">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -262,15 +274,19 @@ export default function App() {
           </button>
         </div>
 
-        {/* Game Container */}
         <div
-          className="relative aspect-square bg-slate-900/50 rounded-[2.5rem] p-4 border border-white/10 shadow-2xl overflow-hidden overscroll-contain"
-          style={{ touchAction: 'none' }}
+          ref={boardRef}
+          className="relative aspect-square bg-slate-900/50 rounded-[2.5rem] p-4 border border-white/10 shadow-2xl overflow-hidden select-none"
+          style={{
+            touchAction: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            overscrollBehavior: 'none',
+            WebkitOverscrollBehavior: 'none',
+          }}
           onTouchStart={handleTouchStart}
-          onTouchMove={(e) => e.preventDefault()}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Background Grid */}
           <div className="grid grid-cols-4 grid-rows-4 gap-3 h-full">
             {Array(16)
               .fill(0)
@@ -279,29 +295,25 @@ export default function App() {
               ))}
           </div>
 
-          {/* Tiles Layer */}
-          {/* Tiles Layer */}
-{/* Tiles Layer */}
-<div className="absolute inset-4 grid grid-cols-4 grid-rows-4 gap-3 pointer-events-none">
-  {grid.map((row, r) =>
-    row.map(
-      (cell, c) =>
-        cell !== 0 && (
-          <div
-            key={`${r}-${c}`}
-            className={`flex items-center justify-center text-2xl font-black rounded-2xl ${
-              colors[cell] || 'bg-purple-900 text-white'
-            }`}
-            style={{ gridRow: r + 1, gridColumn: c + 1 }}
-          >
-            {cell}
+          <div className="absolute inset-4 grid grid-cols-4 grid-rows-4 gap-3 pointer-events-none">
+            {grid.map((row, r) =>
+              row.map(
+                (cell, c) =>
+                  cell !== 0 && (
+                    <div
+                      key={`${r}-${c}`}
+                      className={`flex items-center justify-center text-2xl font-black rounded-2xl ${
+                        colors[cell] || 'bg-purple-900 text-white'
+                      }`}
+                      style={{ gridRow: r + 1, gridColumn: c + 1 }}
+                    >
+                      {cell}
+                    </div>
+                  )
+              )
+            )}
           </div>
-        )
-    )
-  )}
-</div>
 
-          {/* Game Over Overlay */}
           <AnimatePresence>
             {gameOver && (
               <motion.div
@@ -323,7 +335,6 @@ export default function App() {
           </AnimatePresence>
         </div>
 
-        {/* Instructions */}
         <div className="mt-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
             <Gamepad2 className="w-4 h-4 text-cyan-400" />

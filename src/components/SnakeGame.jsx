@@ -57,6 +57,7 @@ export default function SnakeGame() {
   const [touchStart, setTouchStart] = useState(null);
 
   const timerRef = useRef(null);
+  const boardRef = useRef(null);
 
   const resetGame = useCallback(() => {
     const initialSnake = createInitialSnake();
@@ -153,13 +154,24 @@ export default function SnakeGame() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [changeDirection]);
 
+  useEffect(() => {
+    const board = boardRef.current;
+    if (!board) return;
+
+    const preventTouchMove = (e) => {
+      e.preventDefault();
+    };
+
+    board.addEventListener('touchmove', preventTouchMove, { passive: false });
+
+    return () => {
+      board.removeEventListener('touchmove', preventTouchMove);
+    };
+  }, []);
+
   const handleTouchStart = (e) => {
     const touch = e.touches[0];
     setTouchStart({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleTouchMove = (e) => {
-    e.preventDefault();
   };
 
   const handleTouchEnd = (e) => {
@@ -207,7 +219,7 @@ export default function SnakeGame() {
   }, [food, snakeSet]);
 
   return (
-    <div className="min-h-screen bg-[#0B0E14] p-4 text-white flex flex-col items-center">
+    <div className="min-h-screen bg-[#0B0E14] p-4 text-white flex flex-col items-center overflow-hidden overscroll-none">
       <div className="mb-8 flex w-full max-w-md items-center justify-between">
         <div
           onClick={() => navigate('/')}
@@ -258,10 +270,16 @@ export default function SnakeGame() {
         </div>
 
         <div
-          className="relative rounded-[2.5rem] border border-white/10 bg-slate-900/50 p-4 shadow-2xl"
-          style={{ touchAction: 'none' }}
+          ref={boardRef}
+          className="relative rounded-[2.5rem] border border-white/10 bg-slate-900/50 p-4 shadow-2xl select-none"
+          style={{
+            touchAction: 'none',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            overscrollBehavior: 'none',
+            WebkitOverscrollBehavior: 'none',
+          }}
           onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           <div className="mb-4 text-center">
