@@ -11,7 +11,7 @@ export default function NicknameModal({ onSubmit, onAnonymous }) {
         </h2>
 
         <p className="mb-6 text-sm text-slate-400">
-          Choisis ton surnom pour apparaître dans le classement Numbrle.
+          Choisis ton surnom pour apparaître dans le classement HALL OF FAME.
         </p>
 
         <input

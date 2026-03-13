@@ -18,15 +18,17 @@ export default function Leaderboard({ entries }) {
       <div className="space-y-2">
         {entries.map((entry, index) => (
           <div
-            key={`${entry.playerId}-${entry.playedAt}-${index}`}
+            key={`${entry.player_id}-${entry.played_at}-${index}`}
             className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
           >
             <div>
               <p className="font-bold text-white">
                 #{index + 1} {entry.nickname}
               </p>
+
               <p className="text-xs text-slate-400">
-                {entry.difficulty} • {entry.attempts} essai{entry.attempts > 1 ? 's' : ''}
+                {entry.difficulty} • {entry.attempts} essai
+                {entry.attempts > 1 ? 's' : ''}
               </p>
             </div>
 

@@ -2,11 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, Trophy, ChevronLeft, Gamepad2 } from 'lucide-react';
+import NicknameModal from '../components/NicknameModal';
+import { createPlayer, getPlayer, generateRandomNickname } from '../data/player';
+import { saveGame2048Result } from '../data/leaderboard';
 
 // --- Utilities ---
 const GRID_SIZE = 4;
 const INITIAL_TILES = 2;
 const SPAWN_DELAY = 180;
+const BEST_SCORE_KEY = 'dilofun_2048_best_score';
 
 const getEmptyCells = (grid) => {
   const cells = [];
@@ -46,6 +50,10 @@ const canMoveGrid = (grid) => {
   return false;
 };
 
+const getHighestTile = (grid) => {
+  return Math.max(...grid.flat(), 0);
+};
+
 const colors = {
   0: 'bg-slate-800/50',
   2: 'bg-slate-200 text-slate-900',
@@ -61,10 +69,14 @@ const colors = {
   2048: 'bg-gradient-to-br from-purple-600 to-cyan-500 text-white shadow-[0_0_40px_rgba(168,85,247,1)]',
 };
 
-export default function App() {
+export default function Game2048() {
   const navigate = useNavigate();
   const spawnTimeoutRef = useRef(null);
   const boardRef = useRef(null);
+  const resultSavedRef = useRef(false);
+
+  const [player, setPlayer] = useState(null);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const [grid, setGrid] = useState([]);
   const [score, setScore] = useState(0);
@@ -72,6 +84,8 @@ export default function App() {
   const [gameOver, setGameOver] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [isWaitingForSpawn, setIsWaitingForSpawn] = useState(false);
+
+  const highestTile = getHighestTile(grid);
 
   const clearSpawnTimeout = () => {
     if (spawnTimeoutRef.current) {
@@ -91,10 +105,12 @@ export default function App() {
       newGrid = spawnTile(newGrid);
     }
 
+    resultSavedRef.current = false;
     setGrid(newGrid);
     setScore(0);
     setGameOver(false);
     setIsWaitingForSpawn(false);
+    setTouchStart(null);
   }, []);
 
   useEffect(() => {
@@ -104,6 +120,30 @@ export default function App() {
       clearSpawnTimeout();
     };
   }, [initGame]);
+
+  useEffect(() => {
+    const existingPlayer = getPlayer();
+
+    if (existingPlayer) {
+      setPlayer(existingPlayer);
+    } else {
+      setShowNicknameModal(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedBestScore = localStorage.getItem(BEST_SCORE_KEY);
+    if (!storedBestScore) return;
+
+    const parsed = Number(storedBestScore);
+    if (!Number.isNaN(parsed)) {
+      setBestScore(parsed);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(BEST_SCORE_KEY, String(bestScore));
+  }, [bestScore]);
 
   useEffect(() => {
     const board = boardRef.current;
@@ -120,8 +160,25 @@ export default function App() {
     };
   }, []);
 
+  const handleNicknameSubmit = useCallback((nickname) => {
+    const cleanNickname = nickname.trim();
+    if (!cleanNickname) return;
+
+    const newPlayer = createPlayer(cleanNickname, false);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
+  const handleAnonymous = useCallback(() => {
+    const randomName = generateRandomNickname();
+    const newPlayer = createPlayer(randomName, true);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
   const move = useCallback(
     (direction) => {
+      if (showNicknameModal || !player) return;
       if (gameOver || isWaitingForSpawn || !grid.length) return;
 
       let newGrid = grid.map((row) => [...row]);
@@ -171,7 +228,7 @@ export default function App() {
 
       setGrid(newGrid);
       setScore(newScore);
-      if (newScore > bestScore) setBestScore(newScore);
+      setBestScore((prev) => Math.max(prev, newScore));
       setIsWaitingForSpawn(true);
 
       spawnTimeoutRef.current = setTimeout(() => {
@@ -186,11 +243,13 @@ export default function App() {
         spawnTimeoutRef.current = null;
       }, SPAWN_DELAY);
     },
-    [grid, score, bestScore, gameOver, isWaitingForSpawn]
+    [grid, score, gameOver, isWaitingForSpawn, player, showNicknameModal]
   );
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (showNicknameModal) return;
+
       if (e.key === 'ArrowUp') move('UP');
       if (e.key === 'ArrowDown') move('DOWN');
       if (e.key === 'ArrowLeft') move('LEFT');
@@ -199,15 +258,18 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [move]);
+  }, [move, showNicknameModal]);
 
   const handleTouchStart = (e) => {
+    if (showNicknameModal || !player) return;
     if (isWaitingForSpawn) return;
+
     const touch = e.touches[0];
     setTouchStart({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchEnd = (e) => {
+    if (showNicknameModal || !player) return;
     if (!touchStart || isWaitingForSpawn) return;
 
     const touch = e.changedTouches[0];
@@ -222,6 +284,32 @@ export default function App() {
 
     setTouchStart(null);
   };
+
+  useEffect(() => {
+    const saveResult = async () => {
+      if (!gameOver || !player || resultSavedRef.current) return;
+
+      const result = {
+        game: '2048',
+        playerId: player.playerId,
+        nickname: player.nickname,
+        difficulty: 'classic',
+        score,
+        highestTile,
+        won: highestTile >= 2048,
+        playedAt: Date.now(),
+      };
+
+      try {
+        await saveGame2048Result(result);
+        resultSavedRef.current = true;
+      } catch (error) {
+        console.error('Impossible de sauvegarder le score 2048 :', error);
+      }
+    };
+
+    saveResult();
+  }, [gameOver, player, score, highestTile]);
 
   return (
     <div className="min-h-screen bg-[#0B0E14] text-white font-sans flex flex-col items-center p-4 overscroll-none overflow-hidden">
@@ -251,6 +339,24 @@ export default function App() {
       </div>
 
       <div className="w-full max-w-md">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Joueur
+            </p>
+            <p className="font-black text-white">
+              {player ? player.nickname : 'Chargement...'}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Meilleure tuile
+            </p>
+            <p className="font-black text-cyan-400">{highestTile || 0}</p>
+          </div>
+        </div>
+
         <div className="flex gap-4 mb-6">
           <div className="flex-1 bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col items-center">
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -323,7 +429,10 @@ export default function App() {
               >
                 <Trophy className="w-16 h-16 text-yellow-400 mb-4" />
                 <h2 className="text-4xl font-black mb-2">PARTIE FINIE</h2>
-                <p className="text-slate-400 mb-8">Votre score final est de {score}</p>
+                <p className="text-slate-400 mb-2">Votre score final est de {score}</p>
+                <p className="text-slate-500 mb-8">
+                  Plus grande tuile atteinte : {highestTile}
+                </p>
                 <button
                   onClick={initGame}
                   className="px-10 py-4 bg-gradient-to-r from-purple-600 to-cyan-500 rounded-2xl font-black hover:scale-105 transition-transform"
@@ -345,6 +454,13 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {showNicknameModal && (
+        <NicknameModal
+          onSubmit={handleNicknameSubmit}
+          onAnonymous={handleAnonymous}
+        />
+      )}
     </div>
   );
 }

@@ -326,10 +326,10 @@ export default function HomePage() {
               className="mb-6 h-1 rounded-full bg-purple-500"
             />
             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white md:text-6xl">
-              Classement Numbrle
+              Classement des jeux 
             </h2>
             <p className="mt-4 max-w-xl text-slate-500">
-              Les meilleurs joueurs du moment sur Numbrle.
+              Les meilleurs joueurs du moment.
             </p>
           </motion.div>
 
