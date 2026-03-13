@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Play, Gamepad2, Sparkles, MousePointer2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ import ParticleBackground from "../components/ParticleBackground";
 import GameCard from "../components/GameCard";
 import { games } from "../data/games";
 import Leaderboard from "../components/numbrle/Leaderboard";
-import { getNumbrleLeaderboard } from "../data/leaderboard";
+import { getLeaderboardByGame  } from "../data/leaderboard";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -19,7 +19,8 @@ export default function HomePage() {
   };
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [numbrleEntries, setNumbrleEntries] = useState([]);
+  const [leaderboardEntries, setLeaderboardEntries] = useState([]);
+  const [selectedGame, setSelectedGame] = useState("numbrle");
   const { scrollYProgress } = useScroll();
 
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 180]);
@@ -36,11 +37,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const loadLeaderboard = async () => {
-      const entries = await getNumbrleLeaderboard();
-      setNumbrleEntries(entries);
+      const entries = await getLeaderboardByGame (selectedGame);
+      setLeaderboardEntries(entries);
     };
 
     loadLeaderboard();
+  }, [selectedGame]);
+
+  const availableGames = useMemo(() => {
+    return games.map((game) => ({
+      label: game.title,
+      value: game.title.trim().toLowerCase(),
+    }));
   }, []);
 
   return (
@@ -326,14 +334,38 @@ export default function HomePage() {
               className="mb-6 h-1 rounded-full bg-purple-500"
             />
             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white md:text-6xl">
-              Classement des jeux 
+              Classement des jeux
             </h2>
             <p className="mt-4 max-w-xl text-slate-500">
               Les meilleurs joueurs du moment.
             </p>
           </motion.div>
 
-          <Leaderboard entries={numbrleEntries} />
+          <div className="mb-8 flex justify-center">
+            <div className="w-full max-w-sm">
+              <label className="mb-2 block text-sm font-bold uppercase tracking-[0.18em] text-slate-400">
+                Filtrer par jeu
+              </label>
+
+              <select
+                value={selectedGame}
+                onChange={(e) => setSelectedGame(e.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none backdrop-blur-xl transition focus:border-cyan-400"
+              >
+                {availableGames.map((game) => (
+                  <option
+                    key={game.value}
+                    value={game.value}
+                    className="bg-slate-900 text-white"
+                  >
+                    {game.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <Leaderboard entries={leaderboardEntries} />
         </div>
       </section>
 

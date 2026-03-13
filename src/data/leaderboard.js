@@ -4,11 +4,15 @@ import { supabase } from "../lib/supabase";
    HELPERS
 ========================= */
 
+const normalizeNickname = (nickname) => (nickname || "").trim().toLowerCase();
+
 const getBestByNickname = (results, isBetterFn) => {
   const bestByNickname = new Map();
 
   for (const result of results) {
-    const key = result.nickname.trim().toLowerCase();
+    const key = normalizeNickname(result.nickname);
+    if (!key) continue;
+
     const existing = bestByNickname.get(key);
 
     if (!existing) {
@@ -24,7 +28,33 @@ const getBestByNickname = (results, isBetterFn) => {
   return Array.from(bestByNickname.values());
 };
 
-const getPlayedAt = (entry) => new Date(entry.played_at).getTime();
+const getPlayedAt = (entry) => {
+  if (!entry?.played_at) return 0;
+  const time = new Date(entry.played_at).getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+
+const buildInsertPayload = ({
+  playerId,
+  nickname,
+  game,
+  difficulty = "classic",
+  score = null,
+  attempts = null,
+  highestTile = null,
+  won = false,
+  playedAt,
+}) => ({
+  player_id: playerId,
+  nickname,
+  game,
+  difficulty,
+  score,
+  attempts,
+  highest_tile: highestTile,
+  won,
+  played_at: new Date(playedAt || Date.now()).toISOString(),
+});
 
 /* =========================
    SAVE RESULTS
@@ -32,17 +62,17 @@ const getPlayedAt = (entry) => new Date(entry.played_at).getTime();
 
 export const saveNumbrleResult = async (result) => {
   const { error } = await supabase.from("game_results").insert([
-    {
-      player_id: result.playerId,
+    buildInsertPayload({
+      playerId: result.playerId,
       nickname: result.nickname,
       game: "numbrle",
-      difficulty: result.difficulty || "classic",
+      difficulty: result.difficulty,
       score: null,
       attempts: result.attempts,
-      highest_tile: null,
+      highestTile: null,
       won: result.won,
-      played_at: new Date(result.playedAt).toISOString(),
-    },
+      playedAt: result.playedAt,
+    }),
   ]);
 
   if (error) {
@@ -53,17 +83,17 @@ export const saveNumbrleResult = async (result) => {
 
 export const saveGame2048Result = async (result) => {
   const { error } = await supabase.from("game_results").insert([
-    {
-      player_id: result.playerId,
+    buildInsertPayload({
+      playerId: result.playerId,
       nickname: result.nickname,
       game: "2048",
-      difficulty: result.difficulty || "classic",
+      difficulty: result.difficulty,
       score: result.score,
       attempts: null,
-      highest_tile: result.highestTile,
+      highestTile: result.highestTile,
       won: result.won,
-      played_at: new Date(result.playedAt).toISOString(),
-    },
+      playedAt: result.playedAt,
+    }),
   ]);
 
   if (error) {
@@ -74,17 +104,17 @@ export const saveGame2048Result = async (result) => {
 
 export const saveMemoryResult = async (result) => {
   const { error } = await supabase.from("game_results").insert([
-    {
-      player_id: result.playerId,
+    buildInsertPayload({
+      playerId: result.playerId,
       nickname: result.nickname,
       game: "memory",
-      difficulty: result.difficulty || "classic",
+      difficulty: result.difficulty,
       score: null,
       attempts: result.attempts,
-      highest_tile: null,
+      highestTile: null,
       won: result.won,
-      played_at: new Date(result.playedAt).toISOString(),
-    },
+      playedAt: result.playedAt,
+    }),
   ]);
 
   if (error) {
@@ -95,17 +125,17 @@ export const saveMemoryResult = async (result) => {
 
 export const saveSnakeResult = async (result) => {
   const { error } = await supabase.from("game_results").insert([
-    {
-      player_id: result.playerId,
+    buildInsertPayload({
+      playerId: result.playerId,
       nickname: result.nickname,
       game: "snake",
-      difficulty: result.difficulty || "classic",
+      difficulty: result.difficulty,
       score: result.score,
       attempts: null,
-      highest_tile: null,
+      highestTile: null,
       won: result.won,
-      played_at: new Date(result.playedAt).toISOString(),
-    },
+      playedAt: result.playedAt,
+    }),
   ]);
 
   if (error) {
@@ -116,17 +146,17 @@ export const saveSnakeResult = async (result) => {
 
 export const saveNumberGuessResult = async (result) => {
   const { error } = await supabase.from("game_results").insert([
-    {
-      player_id: result.playerId,
+    buildInsertPayload({
+      playerId: result.playerId,
       nickname: result.nickname,
       game: "numberguess",
-      difficulty: result.difficulty || "classic",
+      difficulty: result.difficulty,
       score: null,
       attempts: result.attempts,
-      highest_tile: null,
+      highestTile: null,
       won: result.won,
-      played_at: new Date(result.playedAt).toISOString(),
-    },
+      playedAt: result.playedAt,
+    }),
   ]);
 
   if (error) {
@@ -137,17 +167,17 @@ export const saveNumberGuessResult = async (result) => {
 
 export const saveTicTacToeResult = async (result) => {
   const { error } = await supabase.from("game_results").insert([
-    {
-      player_id: result.playerId,
+    buildInsertPayload({
+      playerId: result.playerId,
       nickname: result.nickname,
       game: "tictactoe",
-      difficulty: result.difficulty || "classic",
+      difficulty: result.difficulty,
       score: result.score,
       attempts: null,
-      highest_tile: null,
+      highestTile: null,
       won: result.won,
-      played_at: new Date(result.playedAt).toISOString(),
-    },
+      playedAt: result.playedAt,
+    }),
   ]);
 
   if (error) {
@@ -188,14 +218,14 @@ export const getNumberGuessResults = async () => getGameResults("numberguess");
 export const getTicTacToeResults = async () => getGameResults("tictactoe");
 
 /* =========================
-   LEADERBOARDS
+   LEADERBOARD HELPERS
 ========================= */
 
-export const getNumbrleLeaderboard = async (difficulty = null) => {
+const getAttemptsLeaderboard = async (game, difficulty = null) => {
   let query = supabase
     .from("game_results")
     .select("*")
-    .eq("game", "numbrle")
+    .eq("game", game)
     .eq("won", true);
 
   if (difficulty) {
@@ -205,33 +235,82 @@ export const getNumbrleLeaderboard = async (difficulty = null) => {
   const { data, error } = await query.order("attempts", { ascending: true });
 
   if (error) {
-    console.error("Erreur lors du chargement du leaderboard Numbrle :", error);
+    console.error(`Erreur lors du chargement du leaderboard ${game} :`, error);
     return [];
   }
 
   const results = data || [];
 
   const bestResults = getBestByNickname(results, (current, existing) => {
+    const currentAttempts = current.attempts ?? Number.MAX_SAFE_INTEGER;
+    const existingAttempts = existing.attempts ?? Number.MAX_SAFE_INTEGER;
+
     return (
-      current.attempts < existing.attempts ||
-      (current.attempts === existing.attempts &&
+      currentAttempts < existingAttempts ||
+      (currentAttempts === existingAttempts &&
         getPlayedAt(current) > getPlayedAt(existing))
     );
   });
 
   return bestResults
     .sort((a, b) => {
-      if (a.attempts !== b.attempts) return a.attempts - b.attempts;
+      const attemptsA = a.attempts ?? Number.MAX_SAFE_INTEGER;
+      const attemptsB = b.attempts ?? Number.MAX_SAFE_INTEGER;
+
+      if (attemptsA !== attemptsB) return attemptsA - attemptsB;
       return getPlayedAt(b) - getPlayedAt(a);
     })
     .slice(0, 10);
 };
 
+const getScoreLeaderboard = async (game, difficulty = null) => {
+  let query = supabase.from("game_results").select("*").eq("game", game);
+
+  if (difficulty) {
+    query = query.eq("difficulty", difficulty);
+  }
+
+  const { data, error } = await query.order("score", { ascending: false });
+
+  if (error) {
+    console.error(`Erreur lors du chargement du leaderboard ${game} :`, error);
+    return [];
+  }
+
+  const results = data || [];
+
+  const bestResults = getBestByNickname(results, (current, existing) => {
+    const currentScore = current.score ?? 0;
+    const existingScore = existing.score ?? 0;
+
+    return (
+      currentScore > existingScore ||
+      (currentScore === existingScore &&
+        getPlayedAt(current) > getPlayedAt(existing))
+    );
+  });
+
+  return bestResults
+    .sort((a, b) => {
+      const scoreA = a.score ?? 0;
+      const scoreB = b.score ?? 0;
+
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      return getPlayedAt(b) - getPlayedAt(a);
+    })
+    .slice(0, 10);
+};
+
+/* =========================
+   LEADERBOARDS
+========================= */
+
+export const getNumbrleLeaderboard = async (difficulty = null) => {
+  return getAttemptsLeaderboard("numbrle", difficulty);
+};
+
 export const getGame2048Leaderboard = async (difficulty = null) => {
-  let query = supabase
-    .from("game_results")
-    .select("*")
-    .eq("game", "2048");
+  let query = supabase.from("game_results").select("*").eq("game", "2048");
 
   if (difficulty) {
     query = query.eq("difficulty", difficulty);
@@ -249,132 +328,45 @@ export const getGame2048Leaderboard = async (difficulty = null) => {
   const results = data || [];
 
   const bestResults = getBestByNickname(results, (current, existing) => {
+    const currentScore = current.score ?? 0;
+    const existingScore = existing.score ?? 0;
+    const currentHighestTile = current.highest_tile ?? 0;
+    const existingHighestTile = existing.highest_tile ?? 0;
+
     return (
-      current.score > existing.score ||
-      (current.score === existing.score &&
-        current.highest_tile > existing.highest_tile) ||
-      (current.score === existing.score &&
-        current.highest_tile === existing.highest_tile &&
+      currentScore > existingScore ||
+      (currentScore === existingScore &&
+        currentHighestTile > existingHighestTile) ||
+      (currentScore === existingScore &&
+        currentHighestTile === existingHighestTile &&
         getPlayedAt(current) > getPlayedAt(existing))
     );
   });
 
   return bestResults
     .sort((a, b) => {
-      if (a.score !== b.score) return b.score - a.score;
-      if (a.highest_tile !== b.highest_tile) {
-        return b.highest_tile - a.highest_tile;
-      }
+      const scoreA = a.score ?? 0;
+      const scoreB = b.score ?? 0;
+      const highestTileA = a.highest_tile ?? 0;
+      const highestTileB = b.highest_tile ?? 0;
+
+      if (scoreA !== scoreB) return scoreB - scoreA;
+      if (highestTileA !== highestTileB) return highestTileB - highestTileA;
       return getPlayedAt(b) - getPlayedAt(a);
     })
     .slice(0, 10);
 };
 
 export const getMemoryLeaderboard = async (difficulty = null) => {
-  let query = supabase
-    .from("game_results")
-    .select("*")
-    .eq("game", "memory")
-    .eq("won", true);
-
-  if (difficulty) {
-    query = query.eq("difficulty", difficulty);
-  }
-
-  const { data, error } = await query.order("attempts", { ascending: true });
-
-  if (error) {
-    console.error("Erreur lors du chargement du leaderboard Memory :", error);
-    return [];
-  }
-
-  const results = data || [];
-
-  const bestResults = getBestByNickname(results, (current, existing) => {
-    return (
-      current.attempts < existing.attempts ||
-      (current.attempts === existing.attempts &&
-        getPlayedAt(current) > getPlayedAt(existing))
-    );
-  });
-
-  return bestResults
-    .sort((a, b) => {
-      if (a.attempts !== b.attempts) return a.attempts - b.attempts;
-      return getPlayedAt(b) - getPlayedAt(a);
-    })
-    .slice(0, 10);
+  return getAttemptsLeaderboard("memory", difficulty);
 };
 
 export const getNumberGuessLeaderboard = async (difficulty = null) => {
-  let query = supabase
-    .from("game_results")
-    .select("*")
-    .eq("game", "numberguess")
-    .eq("won", true);
-
-  if (difficulty) {
-    query = query.eq("difficulty", difficulty);
-  }
-
-  const { data, error } = await query.order("attempts", { ascending: true });
-
-  if (error) {
-    console.error("Erreur lors du chargement du leaderboard NumberGuess :", error);
-    return [];
-  }
-
-  const results = data || [];
-
-  const bestResults = getBestByNickname(results, (current, existing) => {
-    return (
-      current.attempts < existing.attempts ||
-      (current.attempts === existing.attempts &&
-        getPlayedAt(current) > getPlayedAt(existing))
-    );
-  });
-
-  return bestResults
-    .sort((a, b) => {
-      if (a.attempts !== b.attempts) return a.attempts - b.attempts;
-      return getPlayedAt(b) - getPlayedAt(a);
-    })
-    .slice(0, 10);
+  return getAttemptsLeaderboard("numberguess", difficulty);
 };
 
 export const getSnakeLeaderboard = async (difficulty = null) => {
-  let query = supabase
-    .from("game_results")
-    .select("*")
-    .eq("game", "snake");
-
-  if (difficulty) {
-    query = query.eq("difficulty", difficulty);
-  }
-
-  const { data, error } = await query.order("score", { ascending: false });
-
-  if (error) {
-    console.error("Erreur lors du chargement du leaderboard Snake :", error);
-    return [];
-  }
-
-  const results = data || [];
-
-  const bestResults = getBestByNickname(results, (current, existing) => {
-    return (
-      current.score > existing.score ||
-      (current.score === existing.score &&
-        getPlayedAt(current) > getPlayedAt(existing))
-    );
-  });
-
-  return bestResults
-    .sort((a, b) => {
-      if (a.score !== b.score) return b.score - a.score;
-      return getPlayedAt(b) - getPlayedAt(a);
-    })
-    .slice(0, 10);
+  return getScoreLeaderboard("snake", difficulty);
 };
 
 export const getTicTacToeLeaderboard = async (difficulty = null) => {
@@ -396,11 +388,12 @@ export const getTicTacToeLeaderboard = async (difficulty = null) => {
   }
 
   const results = data || [];
-
   const winsByNickname = new Map();
 
   for (const result of results) {
-    const key = result.nickname.trim().toLowerCase();
+    const key = normalizeNickname(result.nickname);
+    if (!key) continue;
+
     const existing = winsByNickname.get(key);
 
     if (!existing) {
@@ -427,4 +420,34 @@ export const getTicTacToeLeaderboard = async (difficulty = null) => {
       return getPlayedAt(b) - getPlayedAt(a);
     })
     .slice(0, 10);
+};
+
+/* =========================
+   GENERIC LEADERBOARD
+========================= */
+
+export const getLeaderboardByGame = async (game, difficulty = null) => {
+  switch (game) {
+    case "numbrle":
+      return getNumbrleLeaderboard(difficulty);
+
+    case "2048":
+      return getGame2048Leaderboard(difficulty);
+
+    case "memory":
+      return getMemoryLeaderboard(difficulty);
+
+    case "snake":
+      return getSnakeLeaderboard(difficulty);
+
+    case "numberguess":
+      return getNumberGuessLeaderboard(difficulty);
+
+    case "tictactoe":
+      return getTicTacToeLeaderboard(difficulty);
+
+    default:
+      console.error("Jeu non pris en charge pour le leaderboard :", game);
+      return [];
+  }
 };
