@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
-import {motion, useScroll, useTransform,} from "framer-motion";
-import {Play, Gamepad2, Cpu, Sparkles, MousePointer2,} from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Play, Gamepad2, Sparkles, MousePointer2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Nav from "../components/Nav";
 import Footer from "../components/Footer";
 import ParticleBackground from "../components/ParticleBackground";
 import GameCard from "../components/GameCard";
 import { games } from "../data/games";
+import Leaderboard from "../components/numbrle/Leaderboard";
+import { getNumbrleLeaderboard } from "../data/leaderboard";
 
 export default function HomePage() {
   const navigate = useNavigate();
+
   const launchRandomGame = () => {
-  const random = games[Math.floor(Math.random() * games.length)];
-  navigate(random.link);
-};
+    const random = games[Math.floor(Math.random() * games.length)];
+    navigate(random.link);
+  };
+
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [numbrleEntries, setNumbrleEntries] = useState([]);
   const { scrollYProgress } = useScroll();
 
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 180]);
@@ -27,6 +32,15 @@ export default function HomePage() {
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const entries = await getNumbrleLeaderboard();
+      setNumbrleEntries(entries);
+    };
+
+    loadLeaderboard();
   }, []);
 
   return (
@@ -149,9 +163,7 @@ export default function HomePage() {
               className="mb-10 max-w-xl text-xl leading-relaxed text-slate-400"
             >
               Défiez vos limites avec nos mini-jeux addictifs.
-              <span className="font-bold text-white">
-                {" "}Pas de téléchargement. Juste du fun.
-              </span>
+              <span className="font-bold text-white"> Pas de téléchargement. Juste du fun.</span>
             </motion.p>
 
             <motion.div
@@ -170,8 +182,6 @@ export default function HomePage() {
                 <span className="relative z-10">JOUER AU HASARD</span>
                 <Play className="relative z-10 h-5 w-5 fill-current" />
               </motion.button>
-
-             
             </motion.div>
 
             <motion.div
@@ -296,6 +306,34 @@ export default function HomePage() {
               />
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 px-6 pb-24">
+        <div className="mx-auto max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 26 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+            className="mb-10 flex flex-col items-center text-center"
+          >
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: 110 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              viewport={{ once: true }}
+              className="mb-6 h-1 rounded-full bg-purple-500"
+            />
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white md:text-6xl">
+              Classement Numbrle
+            </h2>
+            <p className="mt-4 max-w-xl text-slate-500">
+              Les meilleurs joueurs du moment sur Numbrle.
+            </p>
+          </motion.div>
+
+          <Leaderboard entries={numbrleEntries} />
         </div>
       </section>
 

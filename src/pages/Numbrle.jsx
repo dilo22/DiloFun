@@ -84,29 +84,37 @@ export default function Numbrle() {
   }, [addDigit, removeDigit, submitGuess, gameState, showNicknameModal]);
 
   useEffect(() => {
-    if (gameState === 'playing') {
-      resultSavedRef.current = false;
-      return;
-    }
+    const saveResult = async () => {
+      if (gameState === "playing") {
+        resultSavedRef.current = false;
+        return;
+      }
 
-    if (!player || resultSavedRef.current) return;
+      if (!player || resultSavedRef.current) return;
 
-    const lockedRowsCount = rows.filter((row) => row.locked).length;
+      const lockedRowsCount = rows.filter((row) => row.locked).length;
 
-    const result = {
-      game: 'numbrle',
-      playerId: player.playerId,
-      nickname: player.nickname,
-      difficulty,
-      won: gameState === 'won',
-      attempts: lockedRowsCount,
-      maxAttempts: currentConfig.attempts,
-      target,
-      playedAt: Date.now(),
+      const result = {
+        game: "numbrle",
+        playerId: player.playerId,
+        nickname: player.nickname,
+        difficulty,
+        won: gameState === "won",
+        attempts: lockedRowsCount,
+        maxAttempts: currentConfig.attempts,
+        target,
+        playedAt: Date.now(),
+      };
+
+      try {
+        await saveNumbrleResult(result);
+        resultSavedRef.current = true;
+      } catch (error) {
+        console.error("Impossible de sauvegarder le score :", error);
+      }
     };
 
-    saveNumbrleResult(result);
-    resultSavedRef.current = true;
+    saveResult();
   }, [gameState, player, difficulty, rows, currentConfig, target]);
 
   return (
