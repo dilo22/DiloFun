@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronLeft,
@@ -11,9 +11,13 @@ import {
   Gamepad2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import NicknameModal from '../components/NicknameModal';
+import { createPlayer, getPlayer, generateRandomNickname } from '../data/player';
+import { saveNumberGuessResult } from '../data/leaderboard';
 
 const MIN = 1;
 const MAX = 100;
+const BEST_NUMBER_GUESS_KEY = 'dilofun_number_guess_best_score';
 
 function createTarget() {
   return Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
@@ -21,6 +25,10 @@ function createTarget() {
 
 export default function NumberGuess() {
   const navigate = useNavigate();
+  const resultSavedRef = useRef(false);
+
+  const [player, setPlayer] = useState(null);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const [target, setTarget] = useState(createTarget());
   const [guess, setGuess] = useState('');
@@ -32,7 +40,50 @@ export default function NumberGuess() {
 
   const guessedValue = useMemo(() => Number(guess), [guess]);
 
+  useEffect(() => {
+    const existingPlayer = getPlayer();
+
+    if (existingPlayer) {
+      setPlayer(existingPlayer);
+    } else {
+      setShowNicknameModal(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedBest = localStorage.getItem(BEST_NUMBER_GUESS_KEY);
+    if (!storedBest) return;
+
+    const parsed = Number(storedBest);
+    if (!Number.isNaN(parsed)) {
+      setBestScore(parsed);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (bestScore !== null) {
+      localStorage.setItem(BEST_NUMBER_GUESS_KEY, String(bestScore));
+    }
+  }, [bestScore]);
+
+  const handleNicknameSubmit = useCallback((nickname) => {
+    const cleanNickname = nickname.trim();
+    if (!cleanNickname) return;
+
+    const newPlayer = createPlayer(cleanNickname, false);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
+  const handleAnonymous = useCallback(() => {
+    const randomName = generateRandomNickname();
+    const newPlayer = createPlayer(randomName, true);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
   const resetGame = () => {
+    resultSavedRef.current = false;
     setTarget(createTarget());
     setGuess('');
     setAttempts(0);
@@ -42,6 +93,7 @@ export default function NumberGuess() {
   };
 
   const submitGuess = () => {
+    if (showNicknameModal || !player) return;
     if (won) return;
     if (!guess.trim()) return;
     if (!Number.isInteger(guessedValue)) return;
@@ -69,6 +121,32 @@ export default function NumberGuess() {
     setWon(true);
     setBestScore((prev) => (prev === null ? nextAttempts : Math.min(prev, nextAttempts)));
   };
+
+  useEffect(() => {
+    const saveResult = async () => {
+      if (!won || !player || resultSavedRef.current) return;
+
+      const result = {
+        game: 'numberguess',
+        playerId: player.playerId,
+        nickname: player.nickname,
+        difficulty: 'classic',
+        score: null,
+        attempts,
+        won: true,
+        playedAt: Date.now(),
+      };
+
+      try {
+        await saveNumberGuessResult(result);
+        resultSavedRef.current = true;
+      } catch (error) {
+        console.error('Impossible de sauvegarder le score NumberGuess :', error);
+      }
+    };
+
+    saveResult();
+  }, [won, player, attempts]);
 
   const feedbackConfig = {
     low: {
@@ -114,7 +192,7 @@ export default function NumberGuess() {
         </div>
 
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/')}
           className="rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -122,6 +200,26 @@ export default function NumberGuess() {
       </div>
 
       <div className="w-full max-w-md">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Joueur
+            </p>
+            <p className="font-black text-white">
+              {player ? player.nickname : 'Chargement...'}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Mode
+            </p>
+            <p className="font-black text-cyan-400">
+              {MIN}-{MAX}
+            </p>
+          </div>
+        </div>
+
         <div className="mb-6 flex gap-4">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -169,7 +267,7 @@ export default function NumberGuess() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') submitGuess();
                 }}
-                disabled={won}
+                disabled={won || showNicknameModal || !player}
                 placeholder="Entre un nombre"
                 className="w-full bg-transparent text-lg font-black text-white outline-none placeholder:text-slate-500"
               />
@@ -177,7 +275,7 @@ export default function NumberGuess() {
 
             <button
               onClick={submitGuess}
-              disabled={won}
+              disabled={won || showNicknameModal || !player}
               className="mb-4 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-6 py-4 font-black text-white transition-transform hover:scale-[1.01] disabled:opacity-60"
             >
               VALIDER
@@ -239,6 +337,13 @@ export default function NumberGuess() {
           </div>
         </div>
       </div>
+
+      {showNicknameModal && (
+        <NicknameModal
+          onSubmit={handleNicknameSubmit}
+          onAnonymous={handleAnonymous}
+        />
+      )}
     </div>
   );
 }

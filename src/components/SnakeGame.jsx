@@ -2,10 +2,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion';
 import { ChevronLeft, RotateCcw, Trophy, Gamepad2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import NicknameModal from '../components/NicknameModal';
+import { createPlayer, getPlayer, generateRandomNickname } from '../data/player';
+import { saveSnakeResult } from '../data/leaderboard';
 
 const GRID_SIZE = 16;
 const INITIAL_SPEED = 180;
 const MIN_SPEED = 80;
+const BEST_SNAKE_KEY = 'dilofun_snake_best_score';
 
 const DIRECTIONS = {
   UP: { x: 0, y: -1 },
@@ -44,6 +48,12 @@ const getRandomFood = (snake) => {
 
 export default function SnakeGame() {
   const navigate = useNavigate();
+  const timerRef = useRef(null);
+  const boardRef = useRef(null);
+  const resultSavedRef = useRef(false);
+
+  const [player, setPlayer] = useState(null);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const [snake, setSnake] = useState(createInitialSnake());
   const [food, setFood] = useState({ x: 11, y: 8 });
@@ -56,11 +66,9 @@ export default function SnakeGame() {
   const [speed, setSpeed] = useState(INITIAL_SPEED);
   const [touchStart, setTouchStart] = useState(null);
 
-  const timerRef = useRef(null);
-  const boardRef = useRef(null);
-
   const resetGame = useCallback(() => {
     const initialSnake = createInitialSnake();
+    resultSavedRef.current = false;
     setSnake(initialSnake);
     setFood(getRandomFood(initialSnake) || { x: 11, y: 8 });
     setDirection('RIGHT');
@@ -69,10 +77,52 @@ export default function SnakeGame() {
     setGameOver(false);
     setScore(0);
     setSpeed(INITIAL_SPEED);
+    setTouchStart(null);
+  }, []);
+
+  useEffect(() => {
+    const existingPlayer = getPlayer();
+
+    if (existingPlayer) {
+      setPlayer(existingPlayer);
+    } else {
+      setShowNicknameModal(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedBest = localStorage.getItem(BEST_SNAKE_KEY);
+    if (!storedBest) return;
+
+    const parsed = Number(storedBest);
+    if (!Number.isNaN(parsed)) {
+      setBestScore(parsed);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(BEST_SNAKE_KEY, String(bestScore));
+  }, [bestScore]);
+
+  const handleNicknameSubmit = useCallback((nickname) => {
+    const cleanNickname = nickname.trim();
+    if (!cleanNickname) return;
+
+    const newPlayer = createPlayer(cleanNickname, false);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
+  const handleAnonymous = useCallback(() => {
+    const randomName = generateRandomNickname();
+    const newPlayer = createPlayer(randomName, true);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
   }, []);
 
   const changeDirection = useCallback(
     (newDirection) => {
+      if (showNicknameModal || !player) return;
       if (gameOver) return;
       if (OPPOSITES[direction] === newDirection) return;
       if (OPPOSITES[nextDirection] === newDirection) return;
@@ -80,7 +130,7 @@ export default function SnakeGame() {
       setStarted(true);
       setNextDirection(newDirection);
     },
-    [direction, nextDirection, gameOver]
+    [direction, nextDirection, gameOver, player, showNicknameModal]
   );
 
   const moveSnake = useCallback(() => {
@@ -144,6 +194,8 @@ export default function SnakeGame() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (showNicknameModal) return;
+
       if (e.key === 'ArrowUp') changeDirection('UP');
       if (e.key === 'ArrowDown') changeDirection('DOWN');
       if (e.key === 'ArrowLeft') changeDirection('LEFT');
@@ -152,7 +204,7 @@ export default function SnakeGame() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [changeDirection]);
+  }, [changeDirection, showNicknameModal]);
 
   useEffect(() => {
     const board = boardRef.current;
@@ -170,11 +222,14 @@ export default function SnakeGame() {
   }, []);
 
   const handleTouchStart = (e) => {
+    if (showNicknameModal || !player) return;
+
     const touch = e.touches[0];
     setTouchStart({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchEnd = (e) => {
+    if (showNicknameModal || !player) return;
     if (!touchStart) return;
 
     const touch = e.changedTouches[0];
@@ -189,6 +244,32 @@ export default function SnakeGame() {
 
     setTouchStart(null);
   };
+
+  useEffect(() => {
+    const saveResult = async () => {
+      if (!gameOver || !player || resultSavedRef.current) return;
+
+      const result = {
+        game: 'snake',
+        playerId: player.playerId,
+        nickname: player.nickname,
+        difficulty: 'classic',
+        score,
+        attempts: null,
+        won: false,
+        playedAt: Date.now(),
+      };
+
+      try {
+        await saveSnakeResult(result);
+        resultSavedRef.current = true;
+      } catch (error) {
+        console.error('Impossible de sauvegarder le score Snake :', error);
+      }
+    };
+
+    saveResult();
+  }, [gameOver, player, score]);
 
   const snakeSet = useMemo(() => {
     const map = new Map();
@@ -238,7 +319,7 @@ export default function SnakeGame() {
         </div>
 
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/')}
           className="rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -246,6 +327,24 @@ export default function SnakeGame() {
       </div>
 
       <div className="w-full max-w-md">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Joueur
+            </p>
+            <p className="font-black text-white">
+              {player ? player.nickname : 'Chargement...'}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Longueur
+            </p>
+            <p className="font-black text-cyan-400">{snake.length}</p>
+          </div>
+        </div>
+
         <div className="mb-6 flex gap-4">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -346,6 +445,13 @@ export default function SnakeGame() {
           </div>
         </div>
       </div>
+
+      {showNicknameModal && (
+        <NicknameModal
+          onSubmit={handleNicknameSubmit}
+          onAnonymous={handleAnonymous}
+        />
+      )}
     </div>
   );
 }

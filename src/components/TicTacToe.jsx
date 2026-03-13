@@ -1,7 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, RotateCcw, Trophy, Circle, X, Gamepad2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import NicknameModal from '../components/NicknameModal';
+import { createPlayer, getPlayer, generateRandomNickname } from '../data/player';
+import { saveTicTacToeResult } from '../data/leaderboard';
 
 const winningLines = [
   [0, 1, 2],
@@ -76,6 +79,10 @@ function SymbolMark({ value, isWinning }) {
 
 export default function TicTacToe() {
   const navigate = useNavigate();
+  const resultSavedRef = useRef(false);
+
+  const [player, setPlayer] = useState(null);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const [board, setBoard] = useState(Array(9).fill(null));
   const [currentPlayer, setCurrentPlayer] = useState('X');
@@ -87,12 +94,40 @@ export default function TicTacToe() {
   const isDraw = !winner && board.every(Boolean);
   const isGameOver = Boolean(winner || isDraw);
 
+  useEffect(() => {
+    const existingPlayer = getPlayer();
+
+    if (existingPlayer) {
+      setPlayer(existingPlayer);
+    } else {
+      setShowNicknameModal(true);
+    }
+  }, []);
+
+  const handleNicknameSubmit = useCallback((nickname) => {
+    const cleanNickname = nickname.trim();
+    if (!cleanNickname) return;
+
+    const newPlayer = createPlayer(cleanNickname, false);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
+  const handleAnonymous = useCallback(() => {
+    const randomName = generateRandomNickname();
+    const newPlayer = createPlayer(randomName, true);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
   const resetRound = () => {
+    resultSavedRef.current = false;
     setBoard(Array(9).fill(null));
     setCurrentPlayer('X');
   };
 
   const resetAll = () => {
+    resultSavedRef.current = false;
     setBoard(Array(9).fill(null));
     setCurrentPlayer('X');
     setScores({ X: 0, O: 0, draw: 0 });
@@ -124,6 +159,7 @@ export default function TicTacToe() {
   };
 
   const handleCellClick = (index) => {
+    if (showNicknameModal || !player) return;
     if (board[index] || isGameOver || currentPlayer !== 'X') return;
 
     const updated = [...board];
@@ -147,6 +183,32 @@ export default function TicTacToe() {
     setCurrentPlayer('O');
     setTimeout(() => playAi(updated), 350);
   };
+
+  useEffect(() => {
+    const saveResult = async () => {
+      if (!isGameOver || !player || resultSavedRef.current) return;
+
+      const result = {
+        game: 'tictactoe',
+        playerId: player.playerId,
+        nickname: player.nickname,
+        difficulty: 'classic',
+        score: winner === 'X' ? 1 : winner === 'O' ? 0 : 0,
+        attempts: null,
+        won: winner === 'X',
+        playedAt: Date.now(),
+      };
+
+      try {
+        await saveTicTacToeResult(result);
+        resultSavedRef.current = true;
+      } catch (error) {
+        console.error('Impossible de sauvegarder le score TicTacToe :', error);
+      }
+    };
+
+    saveResult();
+  }, [isGameOver, player, winner, isDraw]);
 
   const statusText = winner
     ? winner === 'X'
@@ -178,7 +240,7 @@ export default function TicTacToe() {
         </div>
 
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate('/')}
           className="rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -186,6 +248,24 @@ export default function TicTacToe() {
       </div>
 
       <div className="w-full max-w-md">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Joueur
+            </p>
+            <p className="font-black text-white">
+              {player ? player.nickname : 'Chargement...'}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Mode
+            </p>
+            <p className="font-black text-cyan-400">VS IA</p>
+          </div>
+        </div>
+
         <div className="mb-6 flex gap-4">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
@@ -234,6 +314,7 @@ export default function TicTacToe() {
                 <button
                   key={index}
                   onClick={() => handleCellClick(index)}
+                  disabled={showNicknameModal || !player}
                   className={`aspect-square rounded-[1.25rem] border transition-all flex items-center justify-center ${
                     isWinning
                       ? 'border-yellow-300/40 bg-yellow-300/10'
@@ -254,6 +335,13 @@ export default function TicTacToe() {
           </button>
         </div>
       </div>
+
+      {showNicknameModal && (
+        <NicknameModal
+          onSubmit={handleNicknameSubmit}
+          onAnonymous={handleAnonymous}
+        />
+      )}
     </div>
   );
 }

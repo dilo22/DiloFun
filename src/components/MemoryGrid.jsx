@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,10 +12,14 @@ import {
   Zap,
   Gamepad2,
 } from 'lucide-react';
+import NicknameModal from '../components/NicknameModal';
+import { createPlayer, getPlayer, generateRandomNickname } from '../data/player';
+import { saveMemoryResult } from '../data/leaderboard';
 
 // --- Config ---
 const ICONS = [Star, Diamond, Heart, Zap, Brain, Trophy];
 const TOTAL_PAIRS = 6;
+const BEST_MEMORY_KEY = 'dilofun_memory_best_score';
 
 const shuffleArray = (array) => {
   const copy = [...array];
@@ -47,6 +51,10 @@ const createDeck = () => {
 
 export default function MemoryGrid() {
   const navigate = useNavigate();
+  const resultSavedRef = useRef(false);
+
+  const [player, setPlayer] = useState(null);
+  const [showNicknameModal, setShowNicknameModal] = useState(false);
 
   const [cards, setCards] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -54,13 +62,15 @@ export default function MemoryGrid() {
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const [gameWon, setGameWon] = useState(false);
+  const [bestScore, setBestScore] = useState(null);
 
-  const bestScore = useMemo(() => {
+  const currentBestScore = useMemo(() => {
     if (matchedPairs === TOTAL_PAIRS && moves > 0) return moves;
     return null;
   }, [matchedPairs, moves]);
 
   const initGame = useCallback(() => {
+    resultSavedRef.current = false;
     setCards(createDeck());
     setSelectedIds([]);
     setMoves(0);
@@ -74,12 +84,64 @@ export default function MemoryGrid() {
   }, [initGame]);
 
   useEffect(() => {
+    const existingPlayer = getPlayer();
+
+    if (existingPlayer) {
+      setPlayer(existingPlayer);
+    } else {
+      setShowNicknameModal(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedBest = localStorage.getItem(BEST_MEMORY_KEY);
+    if (!storedBest) return;
+
+    const parsed = Number(storedBest);
+    if (!Number.isNaN(parsed)) {
+      setBestScore(parsed);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (bestScore !== null) {
+      localStorage.setItem(BEST_MEMORY_KEY, String(bestScore));
+    }
+  }, [bestScore]);
+
+  useEffect(() => {
     if (matchedPairs === TOTAL_PAIRS && cards.length > 0) {
       setGameWon(true);
     }
   }, [matchedPairs, cards.length]);
 
+  useEffect(() => {
+    if (gameWon && moves > 0) {
+      setBestScore((prev) => {
+        if (prev === null) return moves;
+        return moves < prev ? moves : prev;
+      });
+    }
+  }, [gameWon, moves]);
+
+  const handleNicknameSubmit = useCallback((nickname) => {
+    const cleanNickname = nickname.trim();
+    if (!cleanNickname) return;
+
+    const newPlayer = createPlayer(cleanNickname, false);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
+  const handleAnonymous = useCallback(() => {
+    const randomName = generateRandomNickname();
+    const newPlayer = createPlayer(randomName, true);
+    setPlayer(newPlayer);
+    setShowNicknameModal(false);
+  }, []);
+
   const handleCardClick = (cardId) => {
+    if (showNicknameModal || !player) return;
     if (isChecking) return;
 
     const clickedCard = cards.find((card) => card.id === cardId);
@@ -120,6 +182,32 @@ export default function MemoryGrid() {
     }
   };
 
+  useEffect(() => {
+    const saveResult = async () => {
+      if (!gameWon || !player || resultSavedRef.current) return;
+
+      const result = {
+        game: 'memory',
+        playerId: player.playerId,
+        nickname: player.nickname,
+        difficulty: 'classic',
+        score: null,
+        attempts: moves,
+        won: true,
+        playedAt: Date.now(),
+      };
+
+      try {
+        await saveMemoryResult(result);
+        resultSavedRef.current = true;
+      } catch (error) {
+        console.error('Impossible de sauvegarder le score Memory :', error);
+      }
+    };
+
+    saveResult();
+  }, [gameWon, player, moves]);
+
   const isCardVisible = (card) => {
     return card.matched || selectedIds.includes(card.id);
   };
@@ -153,6 +241,26 @@ export default function MemoryGrid() {
       </div>
 
       <div className="w-full max-w-md">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Joueur
+            </p>
+            <p className="font-black text-white">
+              {player ? player.nickname : 'Chargement...'}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Record
+            </p>
+            <p className="font-black text-cyan-400">
+              {bestScore !== null ? `${bestScore} coups` : '--'}
+            </p>
+          </div>
+        </div>
+
         {/* Score Board */}
         <div className="mb-6 flex gap-4">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
@@ -192,7 +300,7 @@ export default function MemoryGrid() {
                   type="button"
                   whileTap={{ scale: 0.96 }}
                   onClick={() => handleCardClick(card.id)}
-                  disabled={card.matched || isChecking}
+                  disabled={card.matched || isChecking || showNicknameModal}
                   className="relative aspect-square rounded-2xl focus:outline-none"
                 >
                   <motion.div
@@ -201,7 +309,6 @@ export default function MemoryGrid() {
                     style={{ transformStyle: 'preserve-3d' }}
                     className="relative h-full w-full"
                   >
-                    {/* Front */}
                     <div
                       style={{ backfaceVisibility: 'hidden' }}
                       className="absolute inset-0 flex items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900"
@@ -211,7 +318,6 @@ export default function MemoryGrid() {
                       </div>
                     </div>
 
-                    {/* Back */}
                     <div
                       style={{
                         backfaceVisibility: 'hidden',
@@ -275,12 +381,19 @@ export default function MemoryGrid() {
           </div>
         </div>
 
-        {bestScore && (
+        {currentBestScore && (
           <div className="mt-4 text-center text-sm font-bold text-cyan-400">
-            Meilleure partie en cours : {bestScore} coups
+            Meilleure partie en cours : {currentBestScore} coups
           </div>
         )}
       </div>
+
+      {showNicknameModal && (
+        <NicknameModal
+          onSubmit={handleNicknameSubmit}
+          onAnonymous={handleAnonymous}
+        />
+      )}
     </div>
   );
 }
