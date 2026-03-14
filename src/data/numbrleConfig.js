@@ -1,18 +1,27 @@
 export const DIFFICULTIES = {
   easy: {
     label: 'Facile',
-    digits: 4,
-    attempts: 8,
+    digits: 5,
+    attempts: 6,
+    uniqueDigits: true,
+    maxOnePair: false,
+    minOneRepeat: false,
   },
   medium: {
     label: 'Moyen',
     digits: 5,
     attempts: 6,
+    uniqueDigits: false,
+    maxOnePair: true,
+    minOneRepeat: false,
   },
   hard: {
     label: 'Difficile',
-    digits: 6,
+    digits: 5,
     attempts: 5,
+    uniqueDigits: false,
+    maxOnePair: false,
+    minOneRepeat: true,
   },
 };
 

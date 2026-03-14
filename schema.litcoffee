@@ -51,6 +51,9 @@ Projet
 │   ├── hooks/
 │   │   └── useNumbrleGame.js
 │   │
+|   |__ lib/
+|   |   |___ supabase.js
+|   | 
 │   ├── pages/
 │   │   ├── HomePage.jsx
 │   │   ├── LogoPage.jsx

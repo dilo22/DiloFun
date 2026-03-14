@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Play, Gamepad2, Sparkles, MousePointer2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,7 @@ import ParticleBackground from "../components/ParticleBackground";
 import GameCard from "../components/GameCard";
 import { games } from "../data/games";
 import Leaderboard from "../components/numbrle/Leaderboard";
-import { getLeaderboardByGame  } from "../data/leaderboard";
+import { getLeaderboardByGame, HALL_OF_FAME_GAMES } from "../data/leaderboard";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -37,25 +37,17 @@ export default function HomePage() {
 
   useEffect(() => {
     const loadLeaderboard = async () => {
-      const entries = await getLeaderboardByGame (selectedGame);
+      const entries = await getLeaderboardByGame(selectedGame);
       setLeaderboardEntries(entries);
     };
 
     loadLeaderboard();
   }, [selectedGame]);
 
-  const availableGames = useMemo(() => {
-    return games.map((game) => ({
-      label: game.title,
-      value: game.title.trim().toLowerCase(),
-    }));
-  }, []);
-
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#0B0E14] text-slate-200 selection:bg-cyan-400 selection:text-black">
       <ParticleBackground />
 
-      {/* Cursor follower desktop */}
       <motion.div
         className="pointer-events-none fixed left-0 top-0 z-[120] hidden h-10 w-10 rounded-full border border-cyan-400/70 mix-blend-screen lg:block"
         animate={{ x: mousePos.x - 20, y: mousePos.y - 20 }}
@@ -64,7 +56,6 @@ export default function HomePage() {
         <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-md" />
       </motion.div>
 
-      {/* Background blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
           animate={{ x: [0, 60, 0], y: [0, -40, 0] }}
@@ -83,7 +74,6 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Grid floor */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 hidden h-[45vh] lg:block">
         <div
           className="absolute inset-0"
@@ -319,59 +309,19 @@ export default function HomePage() {
 
       <section className="relative z-10 px-6 pb-24">
         <div className="mx-auto max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 26 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            viewport={{ once: true }}
-            className="mb-10 flex flex-col items-center text-center"
-          >
-            <motion.div
-              initial={{ width: 0 }}
-              whileInView={{ width: 110 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              viewport={{ once: true }}
-              className="mb-6 h-1 rounded-full bg-purple-500"
-            />
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white md:text-6xl">
-              Classement des jeux
-            </h2>
-            <p className="mt-4 max-w-xl text-slate-500">
-              Les meilleurs joueurs du moment.
-            </p>
-          </motion.div>
+         
 
-          <div className="mb-8 flex justify-center">
-            <div className="w-full max-w-sm">
-              <label className="mb-2 block text-sm font-bold uppercase tracking-[0.18em] text-slate-400">
-                Filtrer par jeu
-              </label>
-
-              <select
-                value={selectedGame}
-                onChange={(e) => setSelectedGame(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none backdrop-blur-xl transition focus:border-cyan-400"
-              >
-                {availableGames.map((game) => (
-                  <option
-                    key={game.value}
-                    value={game.value}
-                    className="bg-slate-900 text-white"
-                  >
-                    {game.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <Leaderboard entries={leaderboardEntries} />
+          <Leaderboard
+            entries={leaderboardEntries}
+            selectedGame={selectedGame}
+            onChangeGame={setSelectedGame}
+            gameOptions={HALL_OF_FAME_GAMES}
+          />
         </div>
       </section>
 
       <Footer />
 
-      {/* Scanlines */}
       <div className="pointer-events-none fixed inset-0 z-[110] opacity-[0.10] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.12)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,255,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,3px_100%]" />
     </div>
   );

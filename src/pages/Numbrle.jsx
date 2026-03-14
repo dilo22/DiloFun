@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { RotateCcw } from 'lucide-react';
 import NicknameModal from '../components/NicknameModal';
 import DifficultySelector from '../components/numbrle/DifficultySelector';
 import EndGameModal from '../components/numbrle/EndGameModal';
 import GameLegend from '../components/numbrle/GameLegend';
-import GameStats from '../components/numbrle/GameStats';
 import NumbrleBoard from '../components/numbrle/NumbrleBoard';
 import NumbrleHeader from '../components/numbrle/NumbrleHeader';
 import NumberPad from '../components/numbrle/NumberPad';
@@ -13,7 +13,7 @@ import useNumbrleGame from '../hooks/useNumbrleGame';
 import { saveNumbrleResult } from '../data/leaderboard';
 
 export default function Numbrle() {
-  const [difficulty, setDifficulty] = useState('medium');
+  const [difficulty, setDifficulty] = useState('easy');
   const [player, setPlayer] = useState(null);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const resultSavedRef = useRef(false);
@@ -24,7 +24,6 @@ export default function Numbrle() {
     target,
     gameState,
     message,
-    attemptsLeft,
     rows,
     initGame,
     submitGuess,
@@ -85,24 +84,21 @@ export default function Numbrle() {
 
   useEffect(() => {
     const saveResult = async () => {
-      if (gameState === "playing") {
+      if (gameState === 'playing') {
         resultSavedRef.current = false;
         return;
       }
 
       if (!player || resultSavedRef.current) return;
 
-      const lockedRowsCount = rows.filter((row) => row.locked).length;
+      const attemptsUsed = rows.filter((row) => row.locked).length;
 
       const result = {
-        game: "numbrle",
         playerId: player.playerId,
         nickname: player.nickname,
         difficulty,
-        won: gameState === "won",
-        attempts: lockedRowsCount,
-        maxAttempts: currentConfig.attempts,
-        target,
+        won: gameState === 'won',
+        attempts: attemptsUsed,
         playedAt: Date.now(),
       };
 
@@ -110,50 +106,67 @@ export default function Numbrle() {
         await saveNumbrleResult(result);
         resultSavedRef.current = true;
       } catch (error) {
-        console.error("Impossible de sauvegarder le score :", error);
+        console.error('Impossible de sauvegarder le score :', error);
       }
     };
 
     saveResult();
-  }, [gameState, player, difficulty, rows, currentConfig, target]);
+  }, [gameState, player, difficulty, rows]);
 
   return (
-    <div className="min-h-screen bg-[#0B0E14] p-4 font-sans text-white flex flex-col items-center">
-      <NumbrleHeader />
+    <div className="h-[100dvh] overflow-hidden bg-[#0B0E14] text-white">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col px-3 py-2 sm:px-4">
+        <div className="shrink-0">
+          <NumbrleHeader />
+        </div>
 
-      <div className="w-full max-w-md">
-        <PlayerBadge player={player} />
+        <div className="mt-2 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <PlayerBadge player={player} />
+            </div>
 
-        <DifficultySelector
-          difficulty={difficulty}
-          setDifficulty={setDifficulty}
-        />
+            <button
+              onClick={() => initGame(difficulty)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 transition-transform hover:scale-[1.03]"
+              aria-label="Recommencer"
+              title="Recommencer"
+            >
+              <RotateCcw className="h-5 w-5 text-white" />
+            </button>
+          </div>
 
-        <GameStats
-          attemptsLeft={attemptsLeft}
-          digits={DIGITS}
-          onReset={() => initGame(difficulty)}
-        />
-
-        <div className="mb-4 flex justify-center">
-          <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-widest text-cyan-400">
-            Mode {currentConfig.label}
+          <div className="mt-3">
+            <DifficultySelector
+              difficulty={difficulty}
+              setDifficulty={setDifficulty}
+            />
           </div>
         </div>
 
-        <NumbrleBoard
-          rows={rows}
-          digits={DIGITS}
-          message={message}
-        />
+        <div className="mt-2 flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+            <div className="w-full max-w-full">
+              <NumbrleBoard
+                rows={rows}
+                digits={DIGITS}
+                message={message}
+              />
+            </div>
+          </div>
 
-        <NumberPad
-          onRemove={removeDigit}
-          onSubmit={submitGuess}
-          onAddDigit={addDigit}
-        />
+          <div className="shrink-0 pt-2">
+            <NumberPad
+              onRemove={removeDigit}
+              onSubmit={submitGuess}
+              onAddDigit={addDigit}
+            />
+          </div>
 
-        <GameLegend />
+          <div className="shrink-0 pt-2">
+            <GameLegend />
+          </div>
+        </div>
 
         <EndGameModal
           gameState={gameState}

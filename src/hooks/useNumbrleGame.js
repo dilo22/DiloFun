@@ -1,11 +1,95 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DIFFICULTIES } from '../data/numbrleConfig';
 
-const randomTarget = (digits) => {
+const countDigits = (value) => {
+  const counts = {};
+
+  for (const char of value) {
+    counts[char] = (counts[char] || 0) + 1;
+  }
+
+  return counts;
+};
+
+const hasDuplicateDigits = (value) => {
+  return new Set(value.split('')).size !== value.length;
+};
+
+const hasAtMostOnePair = (value) => {
+  const counts = Object.values(countDigits(value));
+  let pairCount = 0;
+
+  for (const count of counts) {
+    if (count > 2) {
+      return false;
+    }
+
+    if (count === 2) {
+      pairCount += 1;
+    }
+  }
+
+  return pairCount <= 1;
+};
+
+const hasAtLeastOneRepeat = (value) => {
+  return Object.values(countDigits(value)).some((count) => count >= 2);
+};
+
+const randomTarget = (digits, options = {}) => {
+  const {
+    uniqueDigits = false,
+    maxOnePair = false,
+    minOneRepeat = false,
+  } = options;
+
+  if (uniqueDigits) {
+    const pool = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    let result = '';
+
+    while (result.length < digits) {
+      const randomDigit = pool[Math.floor(Math.random() * 10)];
+      if (!result.includes(randomDigit)) {
+        result += randomDigit;
+      }
+    }
+
+    return result;
+  }
+
+  if (maxOnePair) {
+    while (true) {
+      let result = '';
+
+      for (let i = 0; i < digits; i++) {
+        result += Math.floor(Math.random() * 10);
+      }
+
+      if (hasAtMostOnePair(result)) {
+        return result;
+      }
+    }
+  }
+
+  if (minOneRepeat) {
+    while (true) {
+      let result = '';
+
+      for (let i = 0; i < digits; i++) {
+        result += Math.floor(Math.random() * 10);
+      }
+
+      if (hasAtLeastOneRepeat(result)) {
+        return result;
+      }
+    }
+  }
+
   let result = '';
   for (let i = 0; i < digits; i++) {
     result += Math.floor(Math.random() * 10);
   }
+
   return result;
 };
 
@@ -42,23 +126,40 @@ export default function useNumbrleGame(difficulty) {
   const currentConfig = DIFFICULTIES[difficulty];
   const DIGITS = currentConfig.digits;
   const MAX_ATTEMPTS = currentConfig.attempts;
+  const UNIQUE_DIGITS = currentConfig.uniqueDigits;
+  const MAX_ONE_PAIR = currentConfig.maxOnePair;
+  const MIN_ONE_REPEAT = currentConfig.minOneRepeat;
 
   const getDefaultMessage = useCallback(() => {
     return `Trouvez le nombre mystère à ${DIGITS} chiffres.`;
   }, [DIGITS]);
 
-  const [target, setTarget] = useState(() => randomTarget(DIGITS));
+  const [target, setTarget] = useState(() =>
+    randomTarget(DIGITS, {
+      uniqueDigits: UNIQUE_DIGITS,
+      maxOnePair: MAX_ONE_PAIR,
+      minOneRepeat: MIN_ONE_REPEAT,
+    })
+  );
   const [guesses, setGuesses] = useState([]);
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameState, setGameState] = useState('playing');
   const [message, setMessage] = useState(getDefaultMessage());
 
   const attemptsLeft = MAX_ATTEMPTS - guesses.length;
+  const usedAttempts = guesses.length;
 
   const initGame = useCallback(
     (selectedDifficulty = difficulty) => {
       const config = DIFFICULTIES[selectedDifficulty];
-      setTarget(randomTarget(config.digits));
+
+      setTarget(
+        randomTarget(config.digits, {
+          uniqueDigits: config.uniqueDigits,
+          maxOnePair: config.maxOnePair,
+          minOneRepeat: config.minOneRepeat,
+        })
+      );
       setGuesses([]);
       setCurrentGuess('');
       setGameState('playing');
@@ -137,15 +238,27 @@ export default function useNumbrleGame(difficulty) {
 
     setCurrentGuess('');
     setMessage('Continuez, vous vous rapprochez.');
-  }, [currentGuess, gameState, guesses, target, DIGITS, MAX_ATTEMPTS]);
+  }, [
+    currentGuess,
+    gameState,
+    guesses,
+    target,
+    DIGITS,
+    MAX_ATTEMPTS,
+  ]);
 
   const addDigit = useCallback(
     (digit) => {
       if (gameState !== 'playing') return;
       if (currentGuess.length >= DIGITS) return;
+
+      if (UNIQUE_DIGITS && currentGuess.includes(digit)) {
+        return;
+      }
+
       setCurrentGuess((prev) => prev + digit);
     },
-    [currentGuess.length, gameState, DIGITS]
+    [currentGuess, gameState, DIGITS, UNIQUE_DIGITS]
   );
 
   const removeDigit = useCallback(() => {
@@ -163,6 +276,7 @@ export default function useNumbrleGame(difficulty) {
     gameState,
     message,
     attemptsLeft,
+    usedAttempts,
     rows,
     initGame,
     submitGuess,
