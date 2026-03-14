@@ -19,9 +19,9 @@ export default function NumbrleBoard({ rows, digits, message }) {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-3">
+      <div className="mb-4 grid gap-2 sm:gap-3">
         {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="grid gap-3" style={gridStyle}>
+          <div key={rowIndex} className="grid gap-2 sm:gap-3" style={gridStyle}>
             {row.chars.map((char, colIndex) => {
               const status = row.status[colIndex];
 
@@ -30,8 +30,7 @@ export default function NumbrleBoard({ rows, digits, message }) {
                   key={`${rowIndex}-${colIndex}`}
                   initial={{ scale: 0.95, opacity: 0.9 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className={`flex h-11 items-center justify-center rounded-xl border text-lg font-black ${tileStyles[status]}`}
-                >
+                  className={`flex h-9 sm:h-11 items-center justify-center rounded-lg sm:rounded-xl border text-base sm:text-lg font-black ${tileStyles[status]}`}                >
                   {char}
                 </motion.div>
               );
