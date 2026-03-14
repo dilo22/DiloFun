@@ -20,7 +20,8 @@ export default function HomePage() {
   const [leaderboardEntries, setLeaderboardEntries] = useState([]);
   const [selectedGame, setSelectedGame] = useState("numbrle");
 
-  const shouldAnimate = !prefersReducedMotion && !isMobile;
+  const shouldAnimate = !prefersReducedMotion;
+
 
   const heroY = useTransform(scrollYProgress, [0, 1], shouldAnimate ? [0, 120] : [0, 0]);
   const heroOpacity = useTransform(

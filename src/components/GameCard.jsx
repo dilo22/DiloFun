@@ -29,16 +29,16 @@ export default function GameCard({
     <motion.button
       type="button"
       onClick={handleOpenGame}
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
       whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.1 }}
+      viewport={{ once: true, amount: 0.12 }}
       transition={prefersReducedMotion ? undefined : { delay, duration: 0.35 }}
-      whileHover={prefersReducedMotion ? undefined : { y: -6 }}
+      whileHover={prefersReducedMotion ? undefined : { y: -4 }}
       whileTap={{ scale: 0.98 }}
-      className="group block w-full min-w-0 cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm transition-all duration-300 hover:border-cyan-400/30 hover:bg-white/[0.06] sm:p-5 lg:p-6"
+      className="group block w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur-sm transition-colors duration-300 hover:border-cyan-400/30 hover:bg-white/[0.06] sm:p-5 lg:p-6"
     >
       <div
-        className={`mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border sm:mb-5 sm:h-14 sm:w-14 ${
+        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border sm:mb-5 sm:h-14 sm:w-14 ${
           colors[color] || colors.purple
         }`}
       >
@@ -49,23 +49,20 @@ export default function GameCard({
         {title}
       </h3>
 
-      <p className="mb-4 break-words text-sm leading-relaxed text-slate-400 sm:mb-5">
+      <p className="mb-4 text-sm leading-relaxed text-slate-400 sm:mb-5">
         {desc}
       </p>
 
       {preview ? (
-        <div className="mb-4 overflow-hidden rounded-2xl border border-white/5 bg-slate-900/40 p-3 sm:mb-5 sm:p-4">
-          <div className="flex min-h-[96px] w-full items-center justify-center overflow-hidden rounded-xl bg-[#060b14] sm:min-h-[112px] lg:min-h-[128px]">
-            <div className="max-w-full overflow-hidden">
-              {preview}
-            </div>
+        <div className="mb-4 rounded-2xl border border-white/5 bg-slate-900/40 p-3 sm:mb-5 sm:p-4">
+          <div className="flex min-h-[96px] items-center justify-center overflow-hidden rounded-xl bg-[#060b14] sm:min-h-[112px] lg:min-h-[128px]">
+            {preview}
           </div>
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white transition-colors duration-300 group-hover:text-cyan-400 sm:text-sm">
-        <span>Jouer</span>
-        <Play className="h-4 w-4 shrink-0 fill-current" />
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white transition-colors group-hover:text-cyan-400 sm:text-sm">
+        Jouer <Play className="h-4 w-4 fill-current" />
       </div>
     </motion.button>
   );
