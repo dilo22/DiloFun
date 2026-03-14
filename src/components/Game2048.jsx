@@ -312,8 +312,8 @@ export default function Game2048() {
   }, [gameOver, player, score, highestTile]);
 
   return (
-    <div className="min-h-screen bg-[#0B0E14] text-white font-sans flex flex-col items-center p-4 overscroll-none overflow-hidden">
-      <div className="w-full max-w-md flex items-center justify-between mb-8">
+    <div className="h-[100dvh] bg-[#0B0E14] text-white font-sans flex flex-col items-center px-3 py-2 sm:px-4 sm:py-3 overscroll-none overflow-hidden">
+      <div className="w-full max-w-md flex items-center justify-between mb-3 shrink-0">
         <div
           onClick={() => navigate('/')}
           className="flex cursor-pointer items-center gap-2"
@@ -325,7 +325,7 @@ export default function Game2048() {
             <Gamepad2 className="h-4 w-4 text-white" />
           </motion.div>
 
-          <span className="font-black tracking-tighter text-xl text-white">
+          <span className="font-black tracking-tighter text-lg sm:text-xl text-white">
             DILO <span className="text-cyan-400">FUN</span>
           </span>
         </div>
@@ -338,51 +338,51 @@ export default function Game2048() {
         </button>
       </div>
 
-      <div className="w-full max-w-md">
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+      <div className="w-full max-w-md flex-1 flex flex-col min-h-0">
+        <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 shrink-0">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Joueur
             </p>
-            <p className="font-black text-white">
+            <p className="font-black text-sm sm:text-base text-white">
               {player ? player.nickname : 'Chargement...'}
             </p>
           </div>
 
           <div className="text-right">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Meilleure tuile
             </p>
-            <p className="font-black text-cyan-400">{highestTile || 0}</p>
+            <p className="font-black text-lg text-cyan-400">{highestTile || 0}</p>
           </div>
         </div>
 
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1 bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col items-center">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <div className="flex gap-3 mb-3 shrink-0">
+          <div className="flex-1 bg-white/5 border border-white/10 p-2.5 rounded-2xl flex flex-col items-center">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
               Score
             </span>
-            <span className="text-xl font-black">{score}</span>
+            <span className="text-lg sm:text-xl font-black">{score}</span>
           </div>
 
-          <div className="flex-1 bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col items-center">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <div className="flex-1 bg-white/5 border border-white/10 p-2.5 rounded-2xl flex flex-col items-center">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
               Meilleur
             </span>
-            <span className="text-xl font-black text-cyan-400">{bestScore}</span>
+            <span className="text-lg sm:text-xl font-black text-cyan-400">{bestScore}</span>
           </div>
 
           <button
             onClick={initGame}
-            className="w-14 bg-purple-600 hover:bg-purple-500 rounded-2xl flex items-center justify-center transition-colors shadow-lg shadow-purple-600/20"
+            className="w-12 sm:w-14 bg-purple-600 hover:bg-purple-500 rounded-2xl flex items-center justify-center transition-colors shadow-lg shadow-purple-600/20"
           >
-            <RotateCcw className="w-6 h-6" />
+            <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
         <div
           ref={boardRef}
-          className="relative aspect-square bg-slate-900/50 rounded-[2.5rem] p-4 border border-white/10 shadow-2xl overflow-hidden select-none"
+          className="relative flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl overflow-hidden select-none"
           style={{
             touchAction: 'none',
             WebkitUserSelect: 'none',
@@ -393,61 +393,70 @@ export default function Game2048() {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="grid grid-cols-4 grid-rows-4 gap-3 h-full">
-            {Array(16)
-              .fill(0)
-              .map((_, i) => (
-                <div key={i} className="bg-white/5 rounded-2xl" />
-              ))}
-          </div>
+          <div className="flex h-full items-center justify-center">
+            <div
+              className="relative aspect-square w-full rounded-[1.5rem]"
+              style={{ width: 'min(100%, calc(100dvh - 250px), 520px)' }}
+            >
+              <div className="grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3 h-full">
+                {Array(16)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div key={i} className="bg-white/5 rounded-xl sm:rounded-2xl" />
+                  ))}
+              </div>
 
-          <div className="absolute inset-4 grid grid-cols-4 grid-rows-4 gap-3 pointer-events-none">
-            {grid.map((row, r) =>
-              row.map(
-                (cell, c) =>
-                  cell !== 0 && (
-                    <div
-                      key={`${r}-${c}`}
-                      className={`flex items-center justify-center text-2xl font-black rounded-2xl ${
-                        colors[cell] || 'bg-purple-900 text-white'
-                      }`}
-                      style={{ gridRow: r + 1, gridColumn: c + 1 }}
-                    >
-                      {cell}
-                    </div>
+              <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3 pointer-events-none">
+                {grid.map((row, r) =>
+                  row.map(
+                    (cell, c) =>
+                      cell !== 0 && (
+                        <div
+                          key={`${r}-${c}`}
+                          className={`flex items-center justify-center text-lg sm:text-2xl font-black rounded-xl sm:rounded-2xl ${
+                            colors[cell] || 'bg-purple-900 text-white'
+                          }`}
+                          style={{ gridRow: r + 1, gridColumn: c + 1 }}
+                        >
+                          {cell}
+                        </div>
+                      )
                   )
-              )
-            )}
-          </div>
+                )}
+              </div>
 
-          <AnimatePresence>
-            {gameOver && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center"
-              >
-                <Trophy className="w-16 h-16 text-yellow-400 mb-4" />
-                <h2 className="text-4xl font-black mb-2">PARTIE FINIE</h2>
-                <p className="text-slate-400 mb-2">Votre score final est de {score}</p>
-                <p className="text-slate-500 mb-8">
-                  Plus grande tuile atteinte : {highestTile}
-                </p>
-                <button
-                  onClick={initGame}
-                  className="px-10 py-4 bg-gradient-to-r from-purple-600 to-cyan-500 rounded-2xl font-black hover:scale-105 transition-transform"
-                >
-                  RÉESSAYER
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              <AnimatePresence>
+                {gameOver && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center rounded-[1.5rem]"
+                  >
+                    <Trophy className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-400 mb-3" />
+                    <h2 className="text-2xl sm:text-4xl font-black mb-2">PARTIE FINIE</h2>
+                    <p className="text-sm sm:text-base text-slate-400 mb-2">
+                      Votre score final est de {score}
+                    </p>
+                    <p className="text-xs sm:text-sm text-slate-500 mb-6">
+                      Plus grande tuile atteinte : {highestTile}
+                    </p>
+                    <button
+                      onClick={initGame}
+                      className="px-7 py-3 sm:px-10 sm:py-4 bg-gradient-to-r from-purple-600 to-cyan-500 rounded-2xl font-black hover:scale-105 transition-transform"
+                    >
+                      RÉESSAYER
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-            <Gamepad2 className="w-4 h-4 text-cyan-400" />
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+        <div className="mt-3 text-center shrink-0">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
+            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" />
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-tight">
               Utilisez les <span className="text-white">Flèches</span> ou{' '}
               <span className="text-white">Glissez</span> pour fusionner
             </p>

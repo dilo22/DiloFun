@@ -381,73 +381,75 @@ export default function SnakeGame() {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="mb-3 text-center shrink-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              <Gamepad2 className="h-3.5 w-3.5 text-cyan-400" />
-              <p className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
-                {!started && !gameOver
-                  ? 'Glissez ou utilisez les flèches'
-                  : 'Mangez les orbes et évitez les murs'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-center items-center h-[calc(100%-3rem)]">
-            <div
-              className="relative aspect-square rounded-[1.75rem] border border-white/5 bg-[#07101d] p-2.5 w-full"
-              style={{
-                width: 'min(100%, calc(100dvh - 260px), 520px)',
-              }}
-            >
-              <div
-                className="grid h-full gap-[2px]"
-                style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
-              >
-                {cells.map((cell) => {
-                  let classes = 'bg-slate-800/70';
-
-                  if (cell.type === 'food') {
-                    classes = 'bg-gradient-to-br from-purple-500 to-cyan-400';
-                  } else if (cell.type === 'body') {
-                    classes = 'bg-gradient-to-br from-purple-600 to-cyan-500';
-                  } else if (cell.type === 'head') {
-                    classes = 'bg-cyan-300';
-                  }
-
-                  return (
-                    <div key={cell.key} className={`aspect-square rounded-[0.28rem] ${classes}`} />
-                  );
-                })}
+          <div className="flex h-full flex-col min-h-0">
+            <div className="mb-3 text-center shrink-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                <Gamepad2 className="h-3.5 w-3.5 text-cyan-400" />
+                <p className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+                  {!started && !gameOver
+                    ? 'Glissez ou utilisez les flèches'
+                    : 'Mangez les orbes et évitez les murs'}
+                </p>
               </div>
+            </div>
 
-              {!started && !gameOver && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[1.75rem] bg-slate-950/60 p-6 text-center">
-                  <h2 className="mb-2 text-2xl font-black">SNAKE RUN</h2>
-                  <p className="max-w-xs text-xs text-slate-300">
-                    Glissez ou utilisez les flèches pour lancer la partie.
-                  </p>
+            <div className="flex flex-1 items-center justify-center min-h-0">
+              <div
+                className="relative aspect-square rounded-[1.75rem] border border-white/5 bg-[#07101d] p-2.5 w-full"
+                style={{
+                  width: 'min(100%, calc(100dvh - 260px), 520px)',
+                }}
+              >
+                <div
+                  className="grid h-full gap-[2px]"
+                  style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+                >
+                  {cells.map((cell) => {
+                    let classes = 'bg-slate-800/70';
+
+                    if (cell.type === 'food') {
+                      classes = 'bg-gradient-to-br from-purple-500 to-cyan-400';
+                    } else if (cell.type === 'body') {
+                      classes = 'bg-gradient-to-br from-purple-600 to-cyan-500';
+                    } else if (cell.type === 'head') {
+                      classes = 'bg-cyan-300';
+                    }
+
+                    return (
+                      <div key={cell.key} className={`aspect-square rounded-[0.28rem] ${classes}`} />
+                    );
+                  })}
                 </div>
-              )}
 
-              {gameOver && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[1.75rem] bg-slate-950/80 p-6 text-center backdrop-blur-md">
-                  <Trophy className="mb-3 h-12 w-12 text-yellow-400" />
-                  <h2 className="mb-2 text-3xl font-black">GAME OVER</h2>
-                  <p className="mb-1 text-sm text-slate-300">
-                    Longueur finale : <span className="font-black text-cyan-400">{snake.length}</span>
-                  </p>
-                  <p className="mb-6 text-sm text-slate-400">
-                    Score : <span className="font-black text-white">{score}</span>
-                  </p>
+                {!started && !gameOver && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[1.75rem] bg-slate-950/60 p-6 text-center">
+                    <h2 className="mb-2 text-2xl font-black">SNAKE RUN</h2>
+                    <p className="max-w-xs text-xs text-slate-300">
+                      Glissez ou utilisez les flèches pour lancer la partie.
+                    </p>
+                  </div>
+                )}
 
-                  <button
-                    onClick={resetGame}
-                    className="rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-8 py-3 font-black"
-                  >
-                    REJOUER
-                  </button>
-                </div>
-              )}
+                {gameOver && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[1.75rem] bg-slate-950/80 p-6 text-center backdrop-blur-md">
+                    <Trophy className="mb-3 h-12 w-12 text-yellow-400" />
+                    <h2 className="mb-2 text-3xl font-black">GAME OVER</h2>
+                    <p className="mb-1 text-sm text-slate-300">
+                      Longueur finale : <span className="font-black text-cyan-400">{snake.length}</span>
+                    </p>
+                    <p className="mb-6 text-sm text-slate-400">
+                      Score : <span className="font-black text-white">{score}</span>
+                    </p>
+
+                    <button
+                      onClick={resetGame}
+                      className="rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-8 py-3 font-black"
+                    >
+                      REJOUER
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

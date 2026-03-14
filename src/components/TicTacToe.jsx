@@ -55,7 +55,7 @@ function SymbolMark({ value, isWinning }) {
   if (value === 'X') {
     return (
       <X
-        className={`h-10 w-10 md:h-14 md:w-14 ${
+        className={`h-8 w-8 sm:h-10 sm:w-10 md:h-14 md:w-14 ${
           isWinning ? 'text-yellow-300' : 'text-cyan-400'
         }`}
         strokeWidth={3}
@@ -66,7 +66,7 @@ function SymbolMark({ value, isWinning }) {
   if (value === 'O') {
     return (
       <Circle
-        className={`h-10 w-10 md:h-14 md:w-14 ${
+        className={`h-8 w-8 sm:h-10 sm:w-10 md:h-14 md:w-14 ${
           isWinning ? 'text-yellow-300' : 'text-purple-400'
         }`}
         strokeWidth={3}
@@ -193,7 +193,7 @@ export default function TicTacToe() {
         playerId: player.playerId,
         nickname: player.nickname,
         difficulty: 'classic',
-        score: winner === 'X' ? 1 : winner === 'O' ? 0 : 0,
+        score: winner === 'X' ? 1 : 0,
         attempts: null,
         won: winner === 'X',
         playedAt: Date.now(),
@@ -215,14 +215,14 @@ export default function TicTacToe() {
       ? 'Tu as gagné'
       : "L'IA a gagné"
     : isDraw
-    ? 'Match nul'
-    : currentPlayer === 'X'
-    ? 'À ton tour'
-    : "L'IA réfléchit...";
+      ? 'Match nul'
+      : currentPlayer === 'X'
+        ? 'À ton tour'
+        : "L'IA réfléchit...";
 
   return (
-    <div className="min-h-screen bg-[#0B0E14] p-4 text-white flex flex-col items-center">
-      <div className="mb-8 flex w-full max-w-md items-center justify-between">
+    <div className="h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
+      <div className="mb-3 flex w-full max-w-md items-center justify-between shrink-0">
         <div
           onClick={() => navigate('/')}
           className="flex cursor-pointer items-center gap-2"
@@ -234,7 +234,7 @@ export default function TicTacToe() {
             <Gamepad2 className="h-4 w-4 text-white" />
           </motion.div>
 
-          <span className="text-xl font-black tracking-tighter text-white">
+          <span className="text-lg sm:text-xl font-black tracking-tighter text-white">
             DILO <span className="text-cyan-400">FUN</span>
           </span>
         </div>
@@ -247,89 +247,96 @@ export default function TicTacToe() {
         </button>
       </div>
 
-      <div className="w-full max-w-md">
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+      <div className="w-full max-w-md flex-1 flex flex-col min-h-0">
+        <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 shrink-0">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Joueur
             </p>
-            <p className="font-black text-white">
+            <p className="font-black text-sm sm:text-base text-white">
               {player ? player.nickname : 'Chargement...'}
             </p>
           </div>
 
           <div className="text-right">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Mode
             </p>
-            <p className="font-black text-cyan-400">VS IA</p>
+            <p className="font-black text-sm sm:text-base text-cyan-400">VS IA</p>
           </div>
         </div>
 
-        <div className="mb-6 flex gap-4">
-          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+        <div className="mb-3 flex gap-3 shrink-0">
+          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-2.5">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Toi
             </span>
-            <span className="text-xl font-black text-cyan-400">{scores.X}</span>
+            <span className="text-lg sm:text-xl font-black text-cyan-400">{scores.X}</span>
           </div>
 
-          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-2.5">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               IA
             </span>
-            <span className="text-xl font-black text-purple-400">{scores.O}</span>
+            <span className="text-lg sm:text-xl font-black text-purple-400">{scores.O}</span>
           </div>
 
-          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-2.5">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Nuls
             </span>
-            <span className="text-xl font-black text-slate-200">{scores.draw}</span>
+            <span className="text-lg sm:text-xl font-black text-slate-200">{scores.draw}</span>
           </div>
         </div>
 
-        <div className="rounded-[2.5rem] border border-white/10 bg-slate-900/50 p-4 shadow-2xl">
-          <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-cyan-400" />
-              <p className="text-xs font-bold uppercase tracking-tighter text-slate-400">
+        <div className="flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl flex flex-col">
+          <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 shrink-0 sm:px-4 sm:py-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Trophy className="h-4 w-4 text-cyan-400 shrink-0" />
+              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-400 truncate">
                 {statusText}
               </p>
             </div>
 
             <button
               onClick={resetRound}
-              className="rounded-xl bg-purple-600 p-2 transition-colors hover:bg-purple-500"
+              className="rounded-xl bg-purple-600 p-2 transition-colors hover:bg-purple-500 shrink-0"
             >
               <RotateCcw className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 rounded-[2rem] border border-white/5 bg-[#07101d] p-3">
-            {board.map((cell, index) => {
-              const isWinning = winningLine.includes(index);
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            <div
+              className="w-full"
+              style={{ width: 'min(100%, calc(100dvh - 250px), 520px)' }}
+            >
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-3 rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 bg-[#07101d] p-2.5 sm:p-3">
+                {board.map((cell, index) => {
+                  const isWinning = winningLine.includes(index);
 
-              return (
-                <button
-                  key={index}
-                  onClick={() => handleCellClick(index)}
-                  disabled={showNicknameModal || !player}
-                  className={`aspect-square rounded-[1.25rem] border transition-all flex items-center justify-center ${
-                    isWinning
-                      ? 'border-yellow-300/40 bg-yellow-300/10'
-                      : 'border-white/5 bg-slate-800/70 hover:bg-slate-700/70'
-                  }`}
-                >
-                  <SymbolMark value={cell} isWinning={isWinning} />
-                </button>
-              );
-            })}
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleCellClick(index)}
+                      disabled={showNicknameModal || !player}
+                      className={`aspect-square rounded-[1rem] sm:rounded-[1.25rem] border transition-all flex items-center justify-center ${
+                        isWinning
+                          ? 'border-yellow-300/40 bg-yellow-300/10'
+                          : 'border-white/5 bg-slate-800/70 hover:bg-slate-700/70'
+                      }`}
+                    >
+                      <SymbolMark value={cell} isWinning={isWinning} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <button
             onClick={resetAll}
-            className="mt-4 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-6 py-4 font-black"
+            className="mt-3 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 font-black shrink-0"
           >
             RECOMMENCER
           </button>
