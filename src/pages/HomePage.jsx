@@ -57,6 +57,7 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
+    let timeoutId;
 
     const loadLeaderboard = async () => {
       try {
@@ -66,9 +67,10 @@ export default function HomePage() {
         };
 
         if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(run, { timeout: 800 });
+          const id = window.requestIdleCallback(run, { timeout: 800 });
+          return () => window.cancelIdleCallback?.(id);
         } else {
-          setTimeout(run, 120);
+          timeoutId = setTimeout(run, 120);
         }
       } catch (error) {
         if (!cancelled) {
@@ -78,10 +80,12 @@ export default function HomePage() {
       }
     };
 
-    loadLeaderboard();
+    const cleanup = loadLeaderboard();
 
     return () => {
       cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (typeof cleanup === "function") cleanup();
     };
   }, [selectedGame]);
 
@@ -144,7 +148,7 @@ export default function HomePage() {
 
       <motion.section
         style={heroSectionStyle}
-        className="relative z-10 px-4 pb-20 pt-12 sm:px-6 lg:min-h-screen lg:flex lg:items-center lg:pb-28 lg:pt-16"
+        className="relative z-10 px-4 pb-16 pt-12 sm:px-6 lg:min-h-screen lg:flex lg:items-center lg:pb-28 lg:pt-16"
       >
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-14">
           <motion.div
@@ -322,13 +326,13 @@ export default function HomePage() {
         </div>
       </motion.section>
 
-      <section className="relative z-10 px-4 py-20 sm:px-6 lg:py-28">
+      <section className="relative z-20 px-4 py-16 sm:px-6 lg:py-28">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
             whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
             transition={shouldAnimate ? { duration: 0.55 } : undefined}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.15 }}
             className="mb-12 flex flex-col items-center text-center sm:mb-16"
           >
             <motion.div
@@ -346,7 +350,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
             {games.map((game) => (
               <GameCard
                 key={game.title}
@@ -355,7 +359,7 @@ export default function HomePage() {
                 icon={game.icon}
                 color={game.color}
                 delay={shouldAnimate ? game.delay : 0}
-                preview={<game.preview />}
+                preview={!isMobile && game.preview ? <game.preview /> : null}
                 link={game.link}
               />
             ))}
