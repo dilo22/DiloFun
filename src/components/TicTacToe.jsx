@@ -299,7 +299,7 @@ export default function TicTacToe() {
             </div>
 
             <button
-              onClick={resetRound}
+              onClick={resetAll}
               className="rounded-xl bg-purple-600 p-2 transition-colors hover:bg-purple-500 shrink-0"
             >
               <RotateCcw className="h-4 w-4" />
@@ -335,7 +335,7 @@ export default function TicTacToe() {
           </div>
 
           <button
-            onClick={resetAll}
+            onClick={resetRound}
             className="mt-3 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 font-black shrink-0"
           >
             RECOMMENCER
