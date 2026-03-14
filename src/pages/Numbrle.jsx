@@ -13,7 +13,7 @@ import useNumbrleGame from '../hooks/useNumbrleGame';
 import { saveNumbrleResult } from '../data/leaderboard';
 
 export default function Numbrle() {
-  const [difficulty, setDifficulty] = useState('easy');
+  const [difficulty, setDifficulty] = useState('medium');
   const [player, setPlayer] = useState(null);
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const resultSavedRef = useRef(false);
