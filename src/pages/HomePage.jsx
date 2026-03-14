@@ -30,18 +30,27 @@ export default function HomePage() {
   );
 
   const launchRandomGame = () => {
+    if (!games?.length) return;
     const random = games[Math.floor(Math.random() * games.length)];
-    navigate(random.link);
+    if (random?.link) navigate(random.link);
   };
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+    const media = window.matchMedia("(max-width: 1023px)");
+
+    const updateMobileState = (e) => {
+      setIsMobile(e.matches);
     };
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    setIsMobile(media.matches);
+
+    if (media.addEventListener) {
+      media.addEventListener("change", updateMobileState);
+      return () => media.removeEventListener("change", updateMobileState);
+    } else {
+      media.addListener(updateMobileState);
+      return () => media.removeListener(updateMobileState);
+    }
   }, []);
 
   useEffect(() => {
@@ -56,41 +65,43 @@ export default function HomePage() {
   }, [shouldAnimate]);
 
   useEffect(() => {
-    let cancelled = false;
-    let timeoutId;
+    let isMounted = true;
+    let timeoutId = null;
+    let idleId = null;
 
-    const loadLeaderboard = async () => {
+    const fetchLeaderboard = async () => {
       try {
-        const run = async () => {
-          const entries = await getLeaderboardByGame(selectedGame);
-          if (!cancelled) setLeaderboardEntries(entries);
-        };
-
-        if ("requestIdleCallback" in window) {
-          const id = window.requestIdleCallback(run, { timeout: 800 });
-          return () => window.cancelIdleCallback?.(id);
-        } else {
-          timeoutId = setTimeout(run, 120);
+        const entries = await getLeaderboardByGame(selectedGame);
+        if (isMounted) {
+          setLeaderboardEntries(Array.isArray(entries) ? entries : []);
         }
       } catch (error) {
-        if (!cancelled) {
-          console.error("Erreur chargement leaderboard :", error);
-          setLeaderboardEntries([]);
-        }
+        console.error("Erreur chargement leaderboard :", error);
+        if (isMounted) setLeaderboardEntries([]);
       }
     };
 
-    const cleanup = loadLeaderboard();
+    if ("requestIdleCallback" in window && !isMobile) {
+      idleId = window.requestIdleCallback(() => {
+        fetchLeaderboard();
+      }, { timeout: 800 });
+    } else {
+      timeoutId = window.setTimeout(() => {
+        fetchLeaderboard();
+      }, 80);
+    }
 
     return () => {
-      cancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
-      if (typeof cleanup === "function") cleanup();
+      isMounted = false;
+      if (timeoutId) window.clearTimeout(timeoutId);
+      if (idleId && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
     };
-  }, [selectedGame]);
+  }, [selectedGame, isMobile]);
 
   const heroSectionStyle = useMemo(() => {
-    return shouldAnimate ? { y: heroY, opacity: heroOpacity } : undefined;
+    return shouldAnimate ? { y: heroY, opacity: heroOpacity } : {};
   }, [shouldAnimate, heroY, heroOpacity]);
 
   return (
@@ -148,7 +159,7 @@ export default function HomePage() {
 
       <motion.section
         style={heroSectionStyle}
-        className="relative z-10 px-4 pb-16 pt-12 sm:px-6 lg:min-h-screen lg:flex lg:items-center lg:pb-28 lg:pt-16"
+        className="relative z-10 px-4 pb-14 pt-12 sm:px-6 lg:min-h-screen lg:flex lg:items-center lg:pb-28 lg:pt-16"
       >
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-14">
           <motion.div
@@ -326,7 +337,7 @@ export default function HomePage() {
         </div>
       </motion.section>
 
-      <section className="relative z-20 px-4 py-16 sm:px-6 lg:py-28">
+      <section className="relative z-30 px-4 py-16 sm:px-6 lg:py-28">
         <div className="mx-auto max-w-7xl">
           <motion.div
             initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
@@ -353,7 +364,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3">
             {games.map((game) => (
               <GameCard
-                key={game.title}
+                key={game.link || game.title}
                 title={game.title}
                 desc={game.desc}
                 icon={game.icon}
@@ -364,10 +375,12 @@ export default function HomePage() {
               />
             ))}
           </div>
+
+
         </div>
       </section>
 
-      <section className="relative z-10 px-4 pb-20 sm:px-6 lg:pb-24">
+      <section className="relative z-20 px-4 pb-20 sm:px-6 lg:pb-24">
         <div className="mx-auto max-w-4xl">
           <Leaderboard
             entries={leaderboardEntries}

@@ -1,10 +1,11 @@
-import { Zap, Hash, Brain, Swords, Target } from "lucide-react";
+import { Zap, Hash, Brain, Swords, Target, Grid3X3 } from "lucide-react";
 
 import Mini2048 from "../components/Mini2048";
 import MiniNumbrle from "../components/MiniNumbrle";
 import MiniMemoryGrid from "../components/MiniMemoryGrid";
 import MiniSnake from "../components/MiniSnake";
 import MiniTicTacToe from "../components/MiniTicTacToe";
+import MiniSudoku from "../components/MiniSudoku";
 import MiniNumberGuess from "../components/MiniNumberGuess";
 
 export const games = [
@@ -62,4 +63,13 @@ export const games = [
     preview: MiniNumberGuess,
     link: "/number-guess",
   },
+  {
+  title: "Sudoku",
+  desc: "Place les chiffres au bon endroit et termine la grille sans faute.",
+  icon: Grid3X3, 
+  color: "cyan",
+  delay: 0.2,
+  preview: MiniSudoku, 
+  link: "/sudoku",
+}
 ];

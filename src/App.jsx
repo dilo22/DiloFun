@@ -7,6 +7,7 @@ import MemoryGrid from './components/MemoryGrid';
 import SnakeGame from './components/SnakeGame';
 import TicTacToe from './components/TicTacToe';
 import NumberGuess from './components/NumberGuess';
+import Sudoku from "./components/Sudoku";
 import BuyMeCoffee from './components/BuyMeCoffee';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/snake" element={<SnakeGame />} />
         <Route path="/tic-tac-toe" element={<TicTacToe />} />
         <Route path="/number-guess" element={<NumberGuess />} />
+        <Route path="/sudoku" element={<Sudoku />} />
       </Routes>
 
       <BuyMeCoffee />
