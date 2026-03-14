@@ -1,43 +1,59 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function GameCard({ title, desc, icon: Icon, color, delay, preview, link }) {
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const shouldAnimate = !prefersReducedMotion && !isMobile;
 
   const colors = {
-    purple: 'border-purple-500/30 bg-purple-500/20 text-purple-400',
-    cyan: 'border-cyan-500/30 bg-cyan-500/20 text-cyan-400',
-    blue: 'border-blue-500/30 bg-blue-500/20 text-blue-400',
+    purple: 'border-purple-500/30 bg-purple-500/15 text-purple-400',
+    cyan: 'border-cyan-500/30 bg-cyan-500/15 text-cyan-400',
+    blue: 'border-blue-500/30 bg-blue-500/15 text-blue-400',
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay, duration: 0.5 }}
-      whileHover={{ y: -12 }}
+      initial={shouldAnimate ? { opacity: 0, y: 18 } : false}
+      whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={shouldAnimate ? { delay, duration: 0.35 } : undefined}
+      whileHover={shouldAnimate ? { y: -6 } : undefined}
       onClick={() => link && navigate(link)}
-      className="group cursor-pointer overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+      className="group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5 lg:p-6"
     >
-      <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border ${colors[color] || colors.purple}`}>
-        <Icon className="h-8 w-8" />
+      <div
+        className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border sm:mb-5 sm:h-14 sm:w-14 ${colors[color] || colors.purple}`}
+      >
+        <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
       </div>
 
-      <h3 className="mb-2 text-2xl font-bold text-white">{title}</h3>
-      <p className="mb-6 text-sm leading-relaxed text-slate-400">{desc}</p>
+      <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">{title}</h3>
+      <p className="mb-4 text-sm leading-relaxed text-slate-400 sm:mb-5">{desc}</p>
 
-      <div className="mb-6 rounded-2xl border border-white/5 bg-slate-900/50 p-4">
-        <div className="flex h-32 items-center justify-center overflow-hidden rounded-xl bg-[#060b14]">
-            <div className="scale-110">
+      <div className="mb-4 rounded-2xl border border-white/5 bg-slate-900/40 p-3 sm:mb-5 sm:p-4">
+        <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-[#060b14] sm:h-28 lg:h-32">
+          <div className="scale-100 sm:scale-105">
             {preview}
-            </div>
+          </div>
         </div>
-        </div>
+      </div>
 
-      <button className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-white transition-colors group-hover:text-cyan-400">
+      <button className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-white transition-colors group-hover:text-cyan-400 sm:text-sm">
         Jouer <Play className="h-4 w-4 fill-current" />
       </button>
     </motion.div>
