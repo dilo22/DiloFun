@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import React, { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Play, Gamepad2, Sparkles, MousePointer2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Nav from "../components/Nav";
@@ -12,142 +12,197 @@ import { getLeaderboardByGame, HALL_OF_FAME_GAMES } from "../data/leaderboard";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+
+  const [isMobile, setIsMobile] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [leaderboardEntries, setLeaderboardEntries] = useState([]);
+  const [selectedGame, setSelectedGame] = useState("numbrle");
+
+  const shouldAnimate = !prefersReducedMotion && !isMobile;
+
+  const heroY = useTransform(scrollYProgress, [0, 1], shouldAnimate ? [0, 120] : [0, 0]);
+  const heroOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.4],
+    shouldAnimate ? [1, 0.55] : [1, 1]
+  );
 
   const launchRandomGame = () => {
     const random = games[Math.floor(Math.random() * games.length)];
     navigate(random.link);
   };
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [leaderboardEntries, setLeaderboardEntries] = useState([]);
-  const [selectedGame, setSelectedGame] = useState("numbrle");
-  const { scrollYProgress } = useScroll();
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
 
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 180]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0.35]);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
+    if (!shouldAnimate) return;
+
     const handleMouseMove = (e) => {
       setMousePos({ x: e.clientX, y: e.clientY });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  }, [shouldAnimate]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadLeaderboard = async () => {
-      const entries = await getLeaderboardByGame(selectedGame);
-      setLeaderboardEntries(entries);
+      try {
+        const run = async () => {
+          const entries = await getLeaderboardByGame(selectedGame);
+          if (!cancelled) setLeaderboardEntries(entries);
+        };
+
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(run, { timeout: 800 });
+        } else {
+          setTimeout(run, 120);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Erreur chargement leaderboard :", error);
+          setLeaderboardEntries([]);
+        }
+      }
     };
 
     loadLeaderboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedGame]);
+
+  const heroSectionStyle = useMemo(() => {
+    return shouldAnimate ? { y: heroY, opacity: heroOpacity } : undefined;
+  }, [shouldAnimate, heroY, heroOpacity]);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#0B0E14] text-slate-200 selection:bg-cyan-400 selection:text-black">
-      <ParticleBackground />
+      {!isMobile && <ParticleBackground />}
 
-      <motion.div
-        className="pointer-events-none fixed left-0 top-0 z-[120] hidden h-10 w-10 rounded-full border border-cyan-400/70 mix-blend-screen lg:block"
-        animate={{ x: mousePos.x - 20, y: mousePos.y - 20 }}
-        transition={{ type: "spring", damping: 22, stiffness: 260, mass: 0.45 }}
-      >
-        <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-md" />
-      </motion.div>
+      {shouldAnimate && (
+        <motion.div
+          className="pointer-events-none fixed left-0 top-0 z-[120] hidden h-10 w-10 rounded-full border border-cyan-400/60 mix-blend-screen lg:block"
+          animate={{ x: mousePos.x - 20, y: mousePos.y - 20 }}
+          transition={{ type: "spring", damping: 28, stiffness: 220, mass: 0.6 }}
+        >
+          <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-md" />
+        </motion.div>
+      )}
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
-          animate={{ x: [0, 60, 0], y: [0, -40, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-[8%] top-[10%] h-[280px] w-[280px] rounded-full bg-purple-600/20 blur-[100px]"
+          animate={shouldAnimate ? { x: [0, 40, 0], y: [0, -24, 0] } : undefined}
+          transition={shouldAnimate ? { duration: 18, repeat: Infinity, ease: "easeInOut" } : undefined}
+          className="absolute left-[8%] top-[10%] h-[180px] w-[180px] rounded-full bg-purple-600/15 blur-[80px] sm:h-[240px] sm:w-[240px] lg:h-[280px] lg:w-[280px]"
         />
         <motion.div
-          animate={{ x: [0, -80, 0], y: [0, 60, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute right-[10%] top-[20%] h-[340px] w-[340px] rounded-full bg-cyan-500/20 blur-[120px]"
+          animate={shouldAnimate ? { x: [0, -50, 0], y: [0, 40, 0] } : undefined}
+          transition={shouldAnimate ? { duration: 20, repeat: Infinity, ease: "easeInOut" } : undefined}
+          className="absolute right-[10%] top-[20%] h-[220px] w-[220px] rounded-full bg-cyan-500/15 blur-[90px] sm:h-[280px] sm:w-[280px] lg:h-[340px] lg:w-[340px]"
         />
-        <motion.div
-          animate={{ x: [0, 40, 0], y: [0, 80, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-[8%] left-[30%] h-[260px] w-[260px] rounded-full bg-blue-500/10 blur-[90px]"
-        />
+        {!isMobile && (
+          <motion.div
+            animate={shouldAnimate ? { x: [0, 30, 0], y: [0, 60, 0] } : undefined}
+            transition={shouldAnimate ? { duration: 22, repeat: Infinity, ease: "easeInOut" } : undefined}
+            className="absolute bottom-[8%] left-[30%] h-[240px] w-[240px] rounded-full bg-blue-500/10 blur-[90px]"
+          />
+        )}
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 hidden h-[45vh] lg:block">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, rgba(34,211,238,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(34,211,238,0.08) 1px, transparent 1px)",
-            backgroundSize: "56px 56px",
-            transform: "perspective(1000px) rotateX(72deg)",
-            transformOrigin: "bottom",
-            maskImage: "linear-gradient(to top, black, transparent)",
-            WebkitMaskImage: "linear-gradient(to top, black, transparent)",
-          }}
-        />
-      </div>
+      {!isMobile && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 hidden h-[45vh] lg:block">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(34,211,238,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(34,211,238,0.06) 1px, transparent 1px)",
+              backgroundSize: "56px 56px",
+              transform: "perspective(1000px) rotateX(72deg)",
+              transformOrigin: "bottom",
+              maskImage: "linear-gradient(to top, black, transparent)",
+              WebkitMaskImage: "linear-gradient(to top, black, transparent)",
+            }}
+          />
+        </div>
+      )}
 
       <Nav />
 
       <motion.section
-        style={{ y: heroY, opacity: heroOpacity }}
-        className="relative z-10 px-6 pb-28 pt-16 lg:min-h-screen lg:flex lg:items-center"
+        style={heroSectionStyle}
+        className="relative z-10 px-4 pb-20 pt-12 sm:px-6 lg:min-h-screen lg:flex lg:items-center lg:pb-28 lg:pt-16"
       >
-        <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-14">
           <motion.div
-            initial={{ opacity: 0, x: -70 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            initial={shouldAnimate ? { opacity: 0, x: -40 } : false}
+            animate={shouldAnimate ? { opacity: 1, x: 0 } : false}
+            transition={shouldAnimate ? { duration: 0.7, ease: [0.16, 1, 0.3, 1] } : undefined}
           >
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-              className="group relative mb-8 inline-flex items-center gap-3 overflow-hidden rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-xl"
+              initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+              transition={shouldAnimate ? { delay: 0.08, duration: 0.45 } : undefined}
+              className="group relative mb-6 inline-flex items-center gap-3 overflow-hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md sm:mb-8 sm:px-5"
             >
               <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+                {!isMobile && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+                )}
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-cyan-400" />
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-400 transition-colors group-hover:text-white">
+              <span className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-400 transition-colors group-hover:text-white">
                 Saison 2 Disponible
               </span>
             </motion.div>
 
-            <div className="relative mb-8">
-              <div className="pointer-events-none absolute -left-2 -top-2 hidden select-none opacity-20 blur-[2px] lg:block">
-                <h1 className="text-7xl font-black italic leading-[0.85] text-cyan-500 md:text-9xl">
-                  JOUEZ SANS LIMITE
-                </h1>
-              </div>
+            <div className="relative mb-6 sm:mb-8">
+              {!isMobile && (
+                <div className="pointer-events-none absolute -left-2 -top-2 hidden select-none opacity-15 blur-[2px] lg:block">
+                  <h1 className="text-7xl font-black italic leading-[0.85] text-cyan-500 md:text-9xl">
+                    JOUEZ SANS LIMITE
+                  </h1>
+                </div>
+              )}
 
-              <h1 className="relative text-7xl font-black italic leading-[0.85] text-white md:text-9xl">
+              <h1 className="relative text-5xl font-black italic leading-[0.88] text-white sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
                 <motion.span
-                  initial={{ opacity: 0, y: 28 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.18, duration: 0.7 }}
+                  initial={shouldAnimate ? { opacity: 0, y: 18 } : false}
+                  animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+                  transition={shouldAnimate ? { delay: 0.12, duration: 0.5 } : undefined}
                   className="block"
                 >
                   JOUEZ
                 </motion.span>
 
                 <motion.span
-                  initial={{ opacity: 0, y: 28 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.34, duration: 0.7 }}
-                  className="block bg-gradient-to-r from-purple-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(34,211,238,0.18)]"
+                  initial={shouldAnimate ? { opacity: 0, y: 18 } : false}
+                  animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+                  transition={shouldAnimate ? { delay: 0.22, duration: 0.5 } : undefined}
+                  className="block bg-gradient-to-r from-purple-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent"
                 >
                   SANS
                 </motion.span>
 
                 <motion.span
-                  initial={{ opacity: 0, y: 28 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.7 }}
-                  className="block bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(59,130,246,0.16)]"
+                  initial={shouldAnimate ? { opacity: 0, y: 18 } : false}
+                  animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+                  transition={shouldAnimate ? { delay: 0.32, duration: 0.5 } : undefined}
+                  className="block bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 bg-clip-text text-transparent"
                 >
                   LIMITE
                 </motion.span>
@@ -155,142 +210,143 @@ export default function HomePage() {
             </div>
 
             <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, duration: 0.7 }}
-              className="mb-10 max-w-xl text-xl leading-relaxed text-slate-400"
+              initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+              transition={shouldAnimate ? { delay: 0.4, duration: 0.5 } : undefined}
+              className="mb-8 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg lg:mb-10 lg:text-xl"
             >
               Défiez vos limites avec nos mini-jeux addictifs.
               <span className="font-bold text-white"> Pas de téléchargement. Juste du fun.</span>
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.7 }}
-              className="flex flex-wrap gap-5"
+              initial={shouldAnimate ? { opacity: 0, y: 12 } : false}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+              transition={shouldAnimate ? { delay: 0.5, duration: 0.5 } : undefined}
+              className="flex flex-wrap gap-4"
             >
               <motion.button
-                whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(34,211,238,0.35)" }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={shouldAnimate ? { scale: 1.03, boxShadow: "0 0 28px rgba(34,211,238,0.25)" } : undefined}
+                whileTap={shouldAnimate ? { scale: 0.97 } : undefined}
                 onClick={launchRandomGame}
-                className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-10 py-5 font-black text-black"
+                className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-7 py-4 font-black text-black sm:px-10 sm:py-5"
               >
                 <div className="absolute inset-0 -translate-x-full bg-cyan-400 transition-transform duration-300 group-hover:translate-x-0" />
-                <span className="relative z-10">JOUER AU HASARD</span>
+                <span className="relative z-10 text-sm sm:text-base">JOUER AU HASARD</span>
                 <Play className="relative z-10 h-5 w-5 fill-current" />
               </motion.button>
             </motion.div>
 
+            {!isMobile && (
+              <motion.div
+                initial={shouldAnimate ? { opacity: 0, y: 10 } : false}
+                animate={shouldAnimate ? { opacity: 1, y: 0 } : false}
+                transition={shouldAnimate ? { delay: 0.6, duration: 0.5 } : undefined}
+                className="mt-10 hidden items-center gap-3 text-xs font-bold uppercase tracking-[0.24em] text-slate-500 sm:flex"
+              >
+                <MousePointer2 className="h-4 w-4 text-cyan-400" />
+                Survolez, explorez, jouez
+              </motion.div>
+            )}
+          </motion.div>
+
+          {!isMobile && (
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.85, duration: 0.7 }}
-              className="mt-10 hidden items-center gap-3 text-xs font-bold uppercase tracking-[0.24em] text-slate-500 sm:flex"
+              initial={shouldAnimate ? { opacity: 0, scale: 0.86, rotate: -4 } : false}
+              animate={shouldAnimate ? { opacity: 1, scale: 1, rotate: 0 } : false}
+              transition={shouldAnimate ? { duration: 0.8, ease: "easeOut" } : undefined}
+              className="relative hidden lg:block"
             >
-              <MousePointer2 className="h-4 w-4 text-cyan-400" />
-              Survolez, explorez, jouez
-            </motion.div>
-          </motion.div>
+              <div className="relative mx-auto flex aspect-square w-full max-w-[520px] items-center justify-center xl:max-w-[580px]">
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={shouldAnimate ? { rotate: i % 2 === 0 ? 360 : -360 } : undefined}
+                    transition={
+                      shouldAnimate
+                        ? {
+                            duration: 20 + i * 6,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }
+                        : undefined
+                    }
+                    className="absolute rounded-full border border-dashed border-white/10"
+                    style={{ inset: `${i * 42}px` }}
+                  />
+                ))}
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.72, rotate: -8 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 1.1, ease: "easeOut" }}
-            className="relative hidden lg:block"
-          >
-            <div className="relative mx-auto flex aspect-square w-full max-w-[580px] items-center justify-center">
-              {[...Array(3)].map((_, i) => (
                 <motion.div
-                  key={i}
-                  animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-                  transition={{
-                    duration: 16 + i * 6,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="absolute rounded-full border border-dashed border-white/10"
-                  style={{ inset: `${i * 42}px` }}
-                />
-              ))}
+                  animate={shouldAnimate ? { rotate: 360 } : undefined}
+                  transition={shouldAnimate ? { duration: 14, repeat: Infinity, ease: "linear" } : undefined}
+                  className="absolute h-full w-full"
+                >
+                  <div className="absolute left-1/2 top-2 h-6 w-6 -translate-x-1/2 rounded-full bg-cyan-400 shadow-[0_0_16px_#22d3ee]" />
+                  <div className="absolute bottom-3 left-1/2 h-5 w-5 -translate-x-1/2 rounded-full bg-purple-500 shadow-[0_0_14px_#a855f7]" />
+                </motion.div>
 
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute h-full w-full"
-              >
-                <div className="absolute left-1/2 top-2 h-7 w-7 -translate-x-1/2 rounded-full bg-cyan-400 shadow-[0_0_20px_#22d3ee]" />
-                <div className="absolute bottom-3 left-1/2 h-5 w-5 -translate-x-1/2 rounded-full bg-purple-500 shadow-[0_0_18px_#a855f7]" />
-              </motion.div>
+                <motion.div
+                  animate={shouldAnimate ? { y: [0, -14, 0], rotate: [-1, 1, -1] } : undefined}
+                  transition={shouldAnimate ? { duration: 7, repeat: Infinity, ease: "easeInOut" } : undefined}
+                  className="group relative z-10 flex items-center justify-center rounded-[4rem] border border-white/15 bg-gradient-to-br from-purple-600/20 to-cyan-500/20 p-14 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl"
+                >
+                  <div className="absolute inset-0 rounded-[4rem] bg-gradient-to-tr from-cyan-500/10 via-transparent to-purple-500/10" />
+                  <Gamepad2 className="relative h-32 w-32 text-white transition-transform duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.35)] xl:h-40 xl:w-40" />
+                </motion.div>
 
-              <motion.div
-                animate={{
-                  y: [0, -24, 0],
-                  rotate: [-1.5, 1.5, -1.5],
-                }}
-                transition={{
-                  duration: 6.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="group relative z-10 flex items-center justify-center rounded-[4.5rem] border border-white/15 bg-gradient-to-br from-purple-600/20 to-cyan-500/20 p-16 shadow-2xl backdrop-blur-3xl"
-              >
-                <div className="absolute inset-0 rounded-[4.5rem] bg-gradient-to-tr from-cyan-500/10 via-transparent to-purple-500/10" />
-                <Gamepad2 className="relative h-40 w-40 text-white transition-transform duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_30px_rgba(255,255,255,0.5)]" />
-              </motion.div>
+                <motion.div
+                  animate={shouldAnimate ? { x: [0, 8, 0], y: [0, -8, 0] } : undefined}
+                  transition={shouldAnimate ? { duration: 5.5, repeat: Infinity, ease: "easeInOut" } : undefined}
+                  className="absolute right-2 top-[24%] rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md"
+                >
+                  <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
+                    Latency
+                  </div>
+                  <div className="font-mono text-xl font-black text-cyan-400">1.2ms</div>
+                </motion.div>
 
-              <motion.div
-                animate={{ x: [0, 10, 0], y: [0, -10, 0] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute right-2 top-[24%] rounded-2xl border border-white/10 bg-black/50 p-4 backdrop-blur-xl"
-              >
-                <div className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
-                  Latency
-                </div>
-                <div className="font-mono text-xl font-black text-cyan-400">1.2ms</div>
-              </motion.div>
-
-              <motion.div
-                animate={{ x: [0, -12, 0], y: [0, 10, 0] }}
-                transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute left-0 bottom-[18%] rounded-2xl border border-white/10 bg-black/50 p-4 backdrop-blur-xl"
-              >
-                <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-slate-500">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                  Mode
-                </div>
-                <div className="font-mono text-lg font-black text-white">NEON ARCADE</div>
-              </motion.div>
-            </div>
-          </motion.div>
+                <motion.div
+                  animate={shouldAnimate ? { x: [0, -8, 0], y: [0, 8, 0] } : undefined}
+                  transition={shouldAnimate ? { duration: 6.2, repeat: Infinity, ease: "easeInOut" } : undefined}
+                  className="absolute bottom-[18%] left-0 rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-md"
+                >
+                  <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-slate-500">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                    Mode
+                  </div>
+                  <div className="font-mono text-lg font-black text-white">NEON ARCADE</div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.section>
 
-      <section className="relative z-10 px-6 py-24 lg:py-36">
+      <section className="relative z-10 px-4 py-20 sm:px-6 lg:py-28">
         <div className="mx-auto max-w-7xl">
           <motion.div
-            initial={{ opacity: 0, y: 26 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+            initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
+            whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
+            transition={shouldAnimate ? { duration: 0.55 } : undefined}
             viewport={{ once: true }}
-            className="mb-16 flex flex-col items-center text-center"
+            className="mb-12 flex flex-col items-center text-center sm:mb-16"
           >
             <motion.div
-              initial={{ width: 0 }}
-              whileInView={{ width: 110 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              initial={shouldAnimate ? { width: 0 } : false}
+              whileInView={shouldAnimate ? { width: 90 } : undefined}
+              transition={shouldAnimate ? { duration: 0.6, ease: "easeOut" } : undefined}
               viewport={{ once: true }}
-              className="mb-6 h-1 rounded-full bg-cyan-500"
+              className="mb-5 h-1 rounded-full bg-cyan-500"
             />
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white md:text-6xl">
+            <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white sm:text-4xl md:text-5xl lg:text-6xl">
               Jeux du moment
             </h2>
-            <p className="mt-4 max-w-xl text-slate-500">
+            <p className="mt-4 max-w-xl text-sm text-slate-500 sm:text-base">
               Une sélection nerveuse, rapide et pensée pour jouer instantanément.
             </p>
           </motion.div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
             {games.map((game) => (
               <GameCard
                 key={game.title}
@@ -298,7 +354,7 @@ export default function HomePage() {
                 desc={game.desc}
                 icon={game.icon}
                 color={game.color}
-                delay={game.delay}
+                delay={shouldAnimate ? game.delay : 0}
                 preview={<game.preview />}
                 link={game.link}
               />
@@ -307,10 +363,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="relative z-10 px-6 pb-24">
+      <section className="relative z-10 px-4 pb-20 sm:px-6 lg:pb-24">
         <div className="mx-auto max-w-4xl">
-         
-
           <Leaderboard
             entries={leaderboardEntries}
             selectedGame={selectedGame}
@@ -322,7 +376,9 @@ export default function HomePage() {
 
       <Footer />
 
-      <div className="pointer-events-none fixed inset-0 z-[110] opacity-[0.10] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.12)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,255,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,3px_100%]" />
+      {!isMobile && (
+        <div className="pointer-events-none fixed inset-0 z-[110] opacity-[0.08] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.10)_50%),linear-gradient(90deg,rgba(255,0,0,0.015),rgba(0,255,255,0.01),rgba(0,0,255,0.015))] bg-[length:100%_4px,3px_100%]" />
+      )}
     </div>
   );
 }
