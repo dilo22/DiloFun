@@ -19,7 +19,7 @@ export default function NumbrleBoard({ rows, digits, message }) {
         </div>
       </div>
 
-      <div className="grid gap-1.5 sm:gap-2">
+      <div className="grid gap-1 sm:gap-1.5">
         {rows.map((row, rowIndex) => (
           <div
             key={rowIndex}
