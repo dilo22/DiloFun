@@ -288,12 +288,9 @@ export default function MemoryGrid() {
         </div>
 
         {/* Board */}
-        <div className="relative flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl">
+        <div className="relative flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl overflow-hidden">
           <div className="flex h-full items-center justify-center">
-            <div
-              className="w-full rounded-[1.5rem]"
-              style={{ width: 'min(100%, calc(100dvh - 255px), 520px)' }}
-            >
+            <div className="w-full max-w-[520px] rounded-[1.5rem]">
               <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                 {cards.map((card) => {
                   const Icon = card.Icon;

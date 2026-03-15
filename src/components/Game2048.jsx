@@ -312,7 +312,7 @@ export default function Game2048() {
   }, [gameOver, player, score, highestTile]);
 
   return (
-    <div className="h-[100dvh] bg-[#0B0E14] text-white font-sans flex flex-col items-center px-3 py-2 sm:px-4 sm:py-3 overscroll-none overflow-hidden">
+    <div className="min-h-[100dvh] bg-[#0B0E14] text-white font-sans flex flex-col items-center px-3 py-2 sm:px-4 sm:py-3 overscroll-none overflow-hidden">
       <div className="w-full max-w-md flex items-center justify-between mb-3 shrink-0">
         <div
           onClick={() => navigate('/')}
@@ -394,10 +394,7 @@ export default function Game2048() {
           onTouchEnd={handleTouchEnd}
         >
           <div className="flex h-full items-center justify-center">
-            <div
-              className="relative aspect-square w-full rounded-[1.5rem]"
-              style={{ width: 'min(100%, calc(100dvh - 250px), 520px)' }}
-            >
+            <div className="relative aspect-square w-full max-w-[520px] rounded-[1.5rem]">
               <div className="grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3 h-full">
                 {Array(16)
                   .fill(0)
@@ -413,7 +410,7 @@ export default function Game2048() {
                       cell !== 0 && (
                         <div
                           key={`${r}-${c}`}
-                          className={`flex items-center justify-center text-lg sm:text-2xl font-black rounded-xl sm:rounded-2xl ${
+                          className={`flex items-center justify-center text-sm sm:text-2xl font-black rounded-xl sm:rounded-2xl ${
                             colors[cell] || 'bg-purple-900 text-white'
                           }`}
                           style={{ gridRow: r + 1, gridColumn: c + 1 }}

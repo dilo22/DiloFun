@@ -300,7 +300,7 @@ export default function SnakeGame() {
   }, [food, snakeSet]);
 
   return (
-    <div className="h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
+    <div className="min-h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
       <div className="mb-3 flex w-full max-w-md items-center justify-between shrink-0">
         <div
           onClick={() => navigate('/')}
@@ -326,8 +326,8 @@ export default function SnakeGame() {
         </button>
       </div>
 
-      <div className="w-full max-w-md flex-1 flex flex-col min-h-0">
-        <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2 shrink-0">
+      <div className="w-full max-w-md flex-1 min-h-0 flex flex-col">
+        <div className="mb-2 sm:mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2 shrink-0">
           <div>
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Joueur
@@ -345,7 +345,7 @@ export default function SnakeGame() {
           </div>
         </div>
 
-        <div className="mb-3 flex gap-3 shrink-0">
+        <div className="mb-2 sm:mb-3 flex gap-2 sm:gap-3 shrink-0">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-2.5">
             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Score
@@ -362,7 +362,7 @@ export default function SnakeGame() {
 
           <button
             onClick={resetGame}
-            className="flex w-14 items-center justify-center rounded-2xl bg-purple-600 transition-colors hover:bg-purple-500"
+            className="flex w-12 sm:w-14 items-center justify-center rounded-2xl bg-purple-600 transition-colors hover:bg-purple-500 shrink-0"
           >
             <RotateCcw className="w-5 h-5" />
           </button>
@@ -370,7 +370,7 @@ export default function SnakeGame() {
 
         <div
           ref={boardRef}
-          className="relative flex-1 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl select-none min-h-0"
+          className="relative flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl select-none overflow-hidden"
           style={{
             touchAction: 'none',
             userSelect: 'none',
@@ -382,10 +382,10 @@ export default function SnakeGame() {
           onTouchEnd={handleTouchEnd}
         >
           <div className="flex h-full flex-col min-h-0">
-            <div className="mb-3 text-center shrink-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                <Gamepad2 className="h-3.5 w-3.5 text-cyan-400" />
-                <p className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+            <div className="mb-2 sm:mb-3 text-center shrink-0">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+                <Gamepad2 className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+                <p className="truncate text-[10px] font-bold uppercase tracking-tight text-slate-400">
                   {!started && !gameOver
                     ? 'Glissez ou utilisez les flèches'
                     : 'Mangez les orbes et évitez les murs'}
@@ -393,13 +393,8 @@ export default function SnakeGame() {
               </div>
             </div>
 
-            <div className="flex flex-1 items-center justify-center min-h-0">
-              <div
-                className="relative aspect-square rounded-[1.75rem] border border-white/5 bg-[#07101d] p-2.5 w-full"
-                style={{
-                  width: 'min(100%, calc(100dvh - 260px), 520px)',
-                }}
-              >
+            <div className="flex flex-1 min-h-0 items-center justify-center">
+              <div className="relative aspect-square w-full max-w-[520px] rounded-[1.75rem] border border-white/5 bg-[#07101d] p-2.5">
                 <div
                   className="grid h-full gap-[2px]"
                   style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}

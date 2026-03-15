@@ -173,7 +173,7 @@ export default function NumberGuess() {
   const FeedbackIcon = currentFeedback?.icon;
 
   return (
-    <div className="h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
+    <div className="min-h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
       <div className="mb-3 flex w-full max-w-md items-center justify-between shrink-0">
         <div
           onClick={() => navigate('/')}
@@ -199,8 +199,8 @@ export default function NumberGuess() {
         </button>
       </div>
 
-      <div className="w-full max-w-md flex-1 flex flex-col min-h-0">
-        <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 shrink-0">
+      <div className="w-full max-w-md flex-1 min-h-0 flex flex-col">
+        <div className="mb-2 sm:mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 shrink-0">
           <div>
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Joueur
@@ -220,7 +220,7 @@ export default function NumberGuess() {
           </div>
         </div>
 
-        <div className="mb-3 flex gap-3 shrink-0">
+        <div className="mb-2 sm:mb-3 flex gap-2 sm:gap-3 shrink-0">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-2.5">
             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Tentatives
@@ -239,25 +239,25 @@ export default function NumberGuess() {
 
           <button
             onClick={resetGame}
-            className="flex w-12 sm:w-14 items-center justify-center rounded-2xl bg-purple-600 transition-colors hover:bg-purple-500"
+            className="flex w-12 sm:w-14 items-center justify-center rounded-2xl bg-purple-600 transition-colors hover:bg-purple-500 shrink-0"
           >
             <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl flex flex-col">
-          <div className="mb-3 text-center shrink-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              <Target className="h-3.5 w-3.5 text-cyan-400" />
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-400">
+        <div className="flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl flex flex-col overflow-hidden">
+          <div className="mb-2 sm:mb-3 text-center shrink-0">
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
+              <Target className="h-3.5 w-3.5 shrink-0 text-cyan-400" />
+              <p className="truncate text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-400">
                 Devine un nombre entre {MIN} et {MAX}
               </p>
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 rounded-[1.5rem] border border-white/5 bg-[#07101d] p-3 sm:p-4 flex flex-col">
-            <div className="mb-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 shrink-0">
-              <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
+          <div className="flex-1 min-h-0 rounded-[1.5rem] border border-white/5 bg-[#07101d] p-3 sm:p-4 flex flex-col overflow-hidden">
+            <div className="mb-2 sm:mb-3 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 shrink-0">
+              <Hash className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400 shrink-0" />
               <input
                 type="number"
                 min={MIN}
@@ -276,7 +276,7 @@ export default function NumberGuess() {
             <button
               onClick={submitGuess}
               disabled={won || showNicknameModal || !player}
-              className="mb-3 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 font-black text-white transition-transform hover:scale-[1.01] disabled:opacity-60 shrink-0"
+              className="mb-2 sm:mb-3 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-2.5 sm:py-3 font-black text-white transition-transform hover:scale-[1.01] disabled:opacity-60 shrink-0"
             >
               VALIDER
             </button>
@@ -289,26 +289,28 @@ export default function NumberGuess() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.97 }}
                   transition={{ duration: 0.22 }}
-                  className={`mb-3 rounded-2xl border bg-gradient-to-r p-3 shrink-0 ${currentFeedback.classes}`}
+                  className={`mb-2 sm:mb-3 rounded-2xl border bg-gradient-to-r p-3 shrink-0 ${currentFeedback.classes}`}
                 >
                   <div className="flex items-center gap-3">
-                    {FeedbackIcon && <FeedbackIcon className="h-4 w-4 sm:h-5 sm:w-5" />}
-                    <div>
+                    {FeedbackIcon && <FeedbackIcon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />}
+                    <div className="min-w-0">
                       <p className="font-black text-sm sm:text-base">{currentFeedback.title}</p>
-                      <p className="text-xs sm:text-sm text-slate-200/80">{currentFeedback.text}</p>
+                      <p className="text-xs sm:text-sm text-slate-200/80">
+                        {currentFeedback.text}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4 flex flex-col">
-              <p className="mb-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 shrink-0">
+            <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-4 flex flex-col overflow-hidden">
+              <p className="mb-2 sm:mb-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 shrink-0">
                 Historique
               </p>
 
               {history.length === 0 ? (
-                <div className="flex-1 flex items-center">
+                <div className="flex-1 min-h-0 flex items-center">
                   <p className="text-sm text-slate-400">Aucune tentative pour l’instant.</p>
                 </div>
               ) : (
@@ -316,10 +318,14 @@ export default function NumberGuess() {
                   {history.slice().reverse().map((item, index) => (
                     <div
                       key={`${item.value}-${index}`}
-                      className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-800/60 px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-slate-800/60 px-3 py-2"
                     >
-                      <span className="font-black text-white text-sm sm:text-base">{item.value}</span>
-                      <span className="text-xs sm:text-sm text-slate-400">{item.result}</span>
+                      <span className="font-black text-white text-sm sm:text-base">
+                        {item.value}
+                      </span>
+                      <span className="text-xs sm:text-sm text-slate-400 text-right">
+                        {item.result}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -331,7 +337,7 @@ export default function NumberGuess() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={resetGame}
-                className="mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-3 font-black text-white transition hover:bg-white/10 shrink-0"
+                className="mt-2 sm:mt-3 w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 sm:py-3 font-black text-white transition hover:bg-white/10 shrink-0"
               >
                 NOUVELLE PARTIE
               </motion.button>

@@ -221,7 +221,7 @@ export default function TicTacToe() {
         : "L'IA réfléchit...";
 
   return (
-    <div className="h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
+    <div className="min-h-[100dvh] bg-[#0B0E14] px-3 py-2 text-white flex flex-col items-center overflow-hidden overscroll-none">
       <div className="mb-3 flex w-full max-w-md items-center justify-between shrink-0">
         <div
           onClick={() => navigate('/')}
@@ -247,8 +247,8 @@ export default function TicTacToe() {
         </button>
       </div>
 
-      <div className="w-full max-w-md flex-1 flex flex-col min-h-0">
-        <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 shrink-0">
+      <div className="w-full max-w-md flex-1 min-h-0 flex flex-col">
+        <div className="mb-2 sm:mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 shrink-0">
           <div>
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Joueur
@@ -266,7 +266,7 @@ export default function TicTacToe() {
           </div>
         </div>
 
-        <div className="mb-3 flex gap-3 shrink-0">
+        <div className="mb-2 sm:mb-3 flex gap-2 sm:gap-3 shrink-0">
           <div className="flex flex-1 flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-2.5">
             <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
               Toi
@@ -289,8 +289,8 @@ export default function TicTacToe() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl flex flex-col">
-          <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 shrink-0 sm:px-4 sm:py-3">
+        <div className="flex-1 min-h-0 rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl flex flex-col overflow-hidden">
+          <div className="mb-2 sm:mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 shrink-0 sm:px-4 sm:py-3">
             <div className="flex items-center gap-2 min-w-0">
               <Trophy className="h-4 w-4 text-cyan-400 shrink-0" />
               <p className="text-[10px] sm:text-xs font-bold uppercase tracking-tight text-slate-400 truncate">
@@ -307,10 +307,7 @@ export default function TicTacToe() {
           </div>
 
           <div className="flex-1 min-h-0 flex items-center justify-center">
-            <div
-              className="w-full"
-              style={{ width: 'min(100%, calc(100dvh - 250px), 520px)' }}
-            >
+            <div className="w-full max-w-[520px]">
               <div className="grid grid-cols-3 gap-2.5 sm:gap-3 rounded-[1.5rem] sm:rounded-[2rem] border border-white/5 bg-[#07101d] p-2.5 sm:p-3">
                 {board.map((cell, index) => {
                   const isWinning = winningLine.includes(index);
@@ -336,7 +333,7 @@ export default function TicTacToe() {
 
           <button
             onClick={resetRound}
-            className="mt-3 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-3 font-black shrink-0"
+            className="mt-2 sm:mt-3 w-full rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 px-5 py-2.5 sm:py-3 font-black shrink-0"
           >
             RECOMMENCER
           </button>

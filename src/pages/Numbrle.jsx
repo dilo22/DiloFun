@@ -43,7 +43,6 @@ export default function Numbrle() {
 
   const handleNicknameSubmit = useCallback((nickname) => {
     const cleanNickname = nickname.trim();
-
     if (!cleanNickname) return;
 
     const newPlayer = createPlayer(cleanNickname, false);
@@ -114,8 +113,8 @@ export default function Numbrle() {
   }, [gameState, player, difficulty, rows]);
 
   return (
-    <div className="h-[100dvh] overflow-hidden bg-[#0B0E14] text-white">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col px-3 py-2 sm:px-4">
+    <div className="min-h-[100dvh] bg-[#0B0E14] text-white overflow-hidden">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-3 py-2 sm:px-4 sm:py-3">
         <div className="shrink-0">
           <NumbrleHeader />
         </div>
@@ -144,9 +143,9 @@ export default function Numbrle() {
           </div>
         </div>
 
-        <div className="mt-2 flex min-h-0 flex-1 flex-col">
-          <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
-            <div className="w-full max-w-full">
+        <div className="mt-2 flex flex-1 min-h-0 flex-col">
+          <div className="flex flex-1 min-h-0 items-center justify-center">
+            <div className="w-full">
               <NumbrleBoard
                 rows={rows}
                 digits={DIGITS}
