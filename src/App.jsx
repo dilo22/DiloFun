@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+
 import HomePage from './pages/HomePage';
 import Game2048 from './components/Game2048';
 import Numbrle from './pages/Numbrle';
@@ -10,9 +11,13 @@ import NumberGuess from './components/NumberGuess';
 import Sudoku from "./components/Sudoku";
 import BuyMeCoffee from './components/BuyMeCoffee';
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+
+  const showBuyMeCoffee = location.pathname === '/';
+
   return (
-    <Router>
+    <>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/2048" element={<Game2048 />} />
@@ -24,7 +29,15 @@ export default function App() {
         <Route path="/sudoku" element={<Sudoku />} />
       </Routes>
 
-      <BuyMeCoffee />
+      {showBuyMeCoffee && <BuyMeCoffee />}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
