@@ -144,8 +144,8 @@ export default function Numbrle() {
         </div>
 
         <div className="mt-2 flex flex-1 min-h-0 flex-col">
-          <div className="flex flex-1 min-h-0 items-center justify-center">
-            <div className="w-full">
+          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+            <div className="w-full max-w-md">
               <NumbrleBoard
                 rows={rows}
                 digits={DIGITS}
@@ -154,7 +154,7 @@ export default function Numbrle() {
             </div>
           </div>
 
-          <div className="shrink-0 pt-2">
+          <div className="pt-2 shrink-0">
             <NumberPad
               onRemove={removeDigit}
               onSubmit={submitGuess}
@@ -162,9 +162,10 @@ export default function Numbrle() {
             />
           </div>
 
-          <div className="shrink-0 pt-2">
+          <div className="pt-1 shrink-0">
             <GameLegend />
           </div>
+
         </div>
 
         <EndGameModal

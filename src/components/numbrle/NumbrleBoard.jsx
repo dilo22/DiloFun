@@ -9,7 +9,7 @@ export default function NumbrleBoard({ rows, digits, message }) {
   };
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-slate-900/50 p-3 sm:rounded-[2.5rem] sm:p-4 shadow-2xl">
+    <div className="rounded-[2.5rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl w-full">
       <div className="mb-3 text-center sm:mb-4">
         <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2">
           <Hash className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
