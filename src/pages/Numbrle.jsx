@@ -113,77 +113,76 @@ export default function Numbrle() {
   }, [gameState, player, difficulty, rows]);
 
   return (
-    <div className="min-h-[100dvh] bg-[#0B0E14] text-white overflow-hidden">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-md flex-col px-3 py-2 sm:px-4 sm:py-3">
-        <div className="shrink-0">
-          <NumbrleHeader />
-        </div>
-
-        <div className="mt-2 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <PlayerBadge player={player} />
-            </div>
-
-            <button
-              onClick={() => initGame(difficulty)}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 transition-transform hover:scale-[1.03]"
-              aria-label="Recommencer"
-              title="Recommencer"
-            >
-              <RotateCcw className="h-5 w-5 text-white" />
-            </button>
-          </div>
-
-          <div className="mt-3">
-            <DifficultySelector
-              difficulty={difficulty}
-              setDifficulty={setDifficulty}
-            />
-          </div>
-        </div>
-
-        <div className="mt-2 flex flex-1 min-h-0 flex-col">
-          <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-            <div className="w-full max-w-md">
-              <NumbrleBoard
-                rows={rows}
-                digits={DIGITS}
-                message={message}
-              />
-            </div>
-          </div>
-
-          <div className="pt-2 shrink-0">
-            <NumberPad
-              onRemove={removeDigit}
-              onSubmit={submitGuess}
-              onAddDigit={addDigit}
-            />
-          </div>
-
-          <div className="pt-1 shrink-0">
-            <GameLegend />
-          </div>
-
-        </div>
-
-        <EndGameModal
-          gameState={gameState}
-          message={message}
-          player={player}
-          target={target}
-          difficulty={difficulty}
-          onReplay={initGame}
-        />
+  <div className="h-[100dvh] overflow-hidden bg-[#0B0E14] text-white">
+    <div className="mx-auto flex h-[100dvh] w-full max-w-md flex-col px-3 py-2 sm:px-4 sm:py-3">
+      <div className="shrink-0">
+        <NumbrleHeader />
       </div>
 
-      {showNicknameModal && (
-        <NicknameModal
-          onSubmit={handleNicknameSubmit}
-          onAnonymous={handleAnonymous}
-        />
-      )}
+      <div className="mt-2 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <PlayerBadge player={player} />
+          </div>
+
+          <button
+            onClick={() => initGame(difficulty)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-500 transition-transform hover:scale-[1.03] sm:h-11 sm:w-11"
+            aria-label="Recommencer"
+            title="Recommencer"
+          >
+            <RotateCcw className="h-5 w-5 text-white" />
+          </button>
+        </div>
+
+        <div className="mt-2">
+          <DifficultySelector
+            difficulty={difficulty}
+            setDifficulty={setDifficulty}
+          />
+        </div>
+      </div>
+
+      <div className="mt-2 flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+          <div className="w-full max-w-md">
+            <NumbrleBoard
+              rows={rows}
+              digits={DIGITS}
+              message={message}
+            />
+          </div>
+        </div>
+
+        <div className="shrink-0 pt-2">
+          <NumberPad
+            onRemove={removeDigit}
+            onSubmit={submitGuess}
+            onAddDigit={addDigit}
+          />
+        </div>
+
+        <div className="shrink-0 pt-1">
+          <GameLegend />
+        </div>
+      </div>
+
+      <EndGameModal
+        gameState={gameState}
+        message={message}
+        player={player}
+        target={target}
+        difficulty={difficulty}
+        onReplay={initGame}
+      />
     </div>
-  );
+
+    {showNicknameModal && (
+      <NicknameModal
+        onSubmit={handleNicknameSubmit}
+        onAnonymous={handleAnonymous}
+      />
+    )}
+  </div>
+);
 }

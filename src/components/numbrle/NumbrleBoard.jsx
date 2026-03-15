@@ -9,28 +9,33 @@ export default function NumbrleBoard({ rows, digits, message }) {
   };
 
   return (
-    <div className="rounded-[2.5rem] border border-white/10 bg-slate-900/50 p-3 shadow-2xl w-full">
-      <div className="mb-3 text-center sm:mb-4">
-        <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 sm:px-4 sm:py-2">
-          <Hash className="h-3.5 w-3.5 shrink-0 text-cyan-400 sm:h-4 sm:w-4" />
-          <p className="truncate text-[10px] sm:text-xs font-bold uppercase tracking-tight sm:tracking-tighter text-slate-400">
+    <div className="w-full rounded-[2rem] border border-white/10 bg-slate-900/50 p-2.5 shadow-2xl sm:rounded-[2.5rem] sm:p-3">
+      <div className="mb-2 text-center sm:mb-3">
+        <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 sm:gap-2 sm:px-3 sm:py-1.5">
+          <Hash className="h-3 w-3 shrink-0 text-cyan-400 sm:h-3.5 sm:w-3.5" />
+          <p className="truncate text-[9px] font-bold uppercase tracking-tight text-slate-400 sm:text-[10px]">
             {message}
           </p>
         </div>
       </div>
 
-      <div className="grid gap-2 sm:gap-3">
+      <div className="grid gap-1.5 sm:gap-2">
         {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="grid gap-2 sm:gap-3" style={gridStyle}>
+          <div
+            key={rowIndex}
+            className="grid gap-1.5 sm:gap-2"
+            style={gridStyle}
+          >
             {row.chars.map((char, colIndex) => {
               const status = row.status[colIndex];
 
               return (
                 <motion.div
                   key={`${rowIndex}-${colIndex}`}
-                  initial={{ scale: 0.95, opacity: 0.9 }}
+                  initial={{ scale: 0.98, opacity: 0.95 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className={`aspect-[1.15/1] min-h-[48px] sm:min-h-[54px] flex items-center justify-center rounded-lg sm:rounded-xl border text-base sm:text-lg font-black ${tileStyles[status]}`}
+                  transition={{ duration: 0.12 }}
+                  className={`aspect-square min-h-[42px] flex items-center justify-center rounded-lg border text-sm font-black sm:min-h-[50px] sm:rounded-xl sm:text-lg ${tileStyles[status]}`}
                 >
                   {char}
                 </motion.div>

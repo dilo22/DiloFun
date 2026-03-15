@@ -71,4 +71,6 @@ Projet
 ├── package.json
 ├── README.md
 ├── tailwind.config.js
+|__ vercel.json
+|
 └── vite.config.js
