@@ -9,10 +9,10 @@ export default function NumbrleBoard({ rows, digits, message }) {
   };
 
   return (
-    <div className="w-full rounded-[2rem] border border-white/10 bg-slate-900/50 p-2.5 shadow-2xl sm:rounded-[2.5rem] sm:p-3">
-      <div className="mb-2 text-center sm:mb-3">
-        <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 sm:gap-2 sm:px-3 sm:py-1.5">
-          <Hash className="h-3 w-3 shrink-0 text-cyan-400 sm:h-3.5 sm:w-3.5" />
+    <div className="w-full rounded-[1.75rem] border border-white/10 bg-slate-900/50 p-2 shadow-2xl sm:rounded-[2.25rem] sm:p-3">
+      <div className="mb-2 text-center">
+        <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+          <Hash className="h-3 w-3 shrink-0 text-cyan-400" />
           <p className="truncate text-[9px] font-bold uppercase tracking-tight text-slate-400 sm:text-[10px]">
             {message}
           </p>
@@ -35,7 +35,7 @@ export default function NumbrleBoard({ rows, digits, message }) {
                   initial={{ scale: 0.98, opacity: 0.95 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.12 }}
-                  className={`aspect-square min-h-[42px] flex items-center justify-center rounded-lg border text-sm font-black sm:min-h-[50px] sm:rounded-xl sm:text-lg ${tileStyles[status]}`}
+                  className={`flex aspect-square h-[clamp(40px,6.3vh,58px)] items-center justify-center rounded-lg border text-sm font-black sm:rounded-xl sm:text-lg ${tileStyles[status]}`}
                 >
                   {char}
                 </motion.div>
